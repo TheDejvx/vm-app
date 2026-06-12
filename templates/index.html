@@ -35,40 +35,20 @@ body {
 }
 
 /* ── AUTH ── */
-#auth-screen {
-  position: fixed; inset: 0;
-  background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
-}
-.auth-card {
-  background: var(--white);
-  border-radius: 16px;
-  padding: 40px 32px;
-  width: 340px;
-  text-align: center;
-  box-shadow: 0 8px 40px rgba(0,0,0,.4);
-}
-.auth-logo { font-size: 48px; margin-bottom: 12px; }
-.auth-card h1 { font-size: 22px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
-.auth-card p { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
-.auth-card input {
-  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
-  border-radius: 8px; font-size: 15px; margin-bottom: 12px;
-  outline: none; transition: border-color .15s;
-}
-.auth-card input:focus { border-color: var(--primary); }
-.auth-card button {
-  width: 100%; padding: 12px; background: var(--primary);
-  color: var(--white); border: none; border-radius: 8px;
-  font-size: 15px; font-weight: 600; cursor: pointer;
-  transition: background .15s;
-}
-.auth-card button:hover { background: var(--primary-dark); }
 .auth-error { color: var(--danger); font-size: 13px; margin-top: 8px; display:none; }
 
+/* ── LOCK BUTTON ── */
+.lock-btn {
+  background: transparent; border: 1.5px solid rgba(255,255,255,.35);
+  color: rgba(255,255,255,.75); border-radius: 8px;
+  padding: 5px 11px; font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: all .15s; white-space: nowrap;
+}
+.lock-btn:hover { border-color: rgba(255,255,255,.8); color: var(--white); }
+.lock-btn.unlocked { border-color: rgba(144,238,144,.55); color: #90ee90; }
+
 /* ── APP SHELL ── */
-#app { display: none; }
+#app { display: block; }
 
 .app-header {
   background: var(--primary-dark);
@@ -281,23 +261,14 @@ td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
 </head>
 <body>
 
-<!-- AUTH SCREEN -->
-<div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo">⚽</div>
-    <h1>VM Bubblan 2026</h1>
-    <p>Ange lösenord för att fortsätta</p>
-    <input type="password" id="pw-input" placeholder="Lösenord" autocomplete="current-password">
-    <button onclick="tryLogin()">Logga in</button>
-    <div class="auth-error" id="auth-error">Fel lösenord, försök igen.</div>
-  </div>
-</div>
-
 <!-- MAIN APP -->
 <div id="app">
   <div class="app-header">
     <h1><span class="flag">🏆</span> VM Bubblan 2026</h1>
-    <span class="save-status" id="save-status"></span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="save-status" id="save-status"></span>
+      <button class="lock-btn" id="lock-btn" onclick="toggleLock()">🔒 Lås upp</button>
+    </div>
   </div>
 
   <div class="tab-bar">
@@ -362,6 +333,27 @@ td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
   </div>
 </div>
 
+<!-- UNLOCK MODAL -->
+<div id="unlock-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:600;padding:16px">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-header">
+      <h3>🔒 Lås upp redigering</h3>
+      <button class="btn-ghost" onclick="closeUnlockModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Lösenord</label>
+        <input type="password" id="unlock-pw" placeholder="Lösenord" autocomplete="current-password">
+      </div>
+      <div class="auth-error" id="unlock-error">Fel lösenord, försök igen.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeUnlockModal()">Avbryt</button>
+      <button class="btn btn-primary" onclick="submitUnlock()">Lås upp</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD BET MODAL -->
 <div id="modal-overlay">
   <div class="modal">
@@ -413,6 +405,8 @@ const AUTH_KEY = 'vm_auth';
 const AUTH_PW  = 'vmgurra1337';
 const AUTH_TTL = 12 * 60 * 60 * 1000;
 
+let pendingAction = null;
+
 function checkAuth() {
   try {
     const raw = localStorage.getItem(AUTH_KEY);
@@ -424,30 +418,71 @@ function checkAuth() {
 function setAuth() {
   localStorage.setItem(AUTH_KEY, JSON.stringify({ ts: Date.now() }));
 }
-function tryLogin() {
-  const pw = document.getElementById('pw-input').value;
-  const err = document.getElementById('auth-error');
+function clearAuth() {
+  localStorage.removeItem(AUTH_KEY);
+}
+
+function requireAuth(action) {
+  if (checkAuth()) { action(); return; }
+  pendingAction = action;
+  openUnlockModal();
+}
+
+function openUnlockModal() {
+  document.getElementById('unlock-pw').value = '';
+  document.getElementById('unlock-error').style.display = 'none';
+  document.getElementById('unlock-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('unlock-pw').focus(), 100);
+}
+function closeUnlockModal() {
+  document.getElementById('unlock-modal').style.display = 'none';
+  pendingAction = null;
+}
+function submitUnlock() {
+  const pw = document.getElementById('unlock-pw').value;
   if (pw === AUTH_PW) {
     setAuth();
-    document.getElementById('auth-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    init();
+    updateAuthUI();
+    closeUnlockModal();
+    if (pendingAction) { pendingAction(); pendingAction = null; }
   } else {
-    err.style.display = 'block';
-    document.getElementById('pw-input').value = '';
-    document.getElementById('pw-input').focus();
+    document.getElementById('unlock-error').style.display = 'block';
+    document.getElementById('unlock-pw').value = '';
+    document.getElementById('unlock-pw').focus();
   }
 }
-document.getElementById('pw-input').addEventListener('keydown', e => {
-  if (e.key === 'Enter') tryLogin();
+document.getElementById('unlock-pw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitUnlock();
 });
 
-// Boot
-if (checkAuth()) {
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  init();
+function toggleLock() {
+  if (checkAuth()) {
+    clearAuth();
+    updateAuthUI();
+    render();
+  } else {
+    pendingAction = null;
+    openUnlockModal();
+  }
 }
+
+function updateAuthUI() {
+  const authed = checkAuth();
+  const btn = document.getElementById('lock-btn');
+  if (authed) {
+    btn.textContent = '🔓 Upplåst';
+    btn.classList.add('unlocked');
+    btn.title = 'Klicka för att låsa';
+  } else {
+    btn.textContent = '🔒 Lås upp';
+    btn.classList.remove('unlocked');
+    btn.title = 'Klicka för att låsa upp redigering';
+  }
+}
+
+// Boot – app always visible, no auth gate
+init();
+updateAuthUI();
 
 // ── STATE ──
 let state = {
@@ -613,15 +648,18 @@ function renderSummary() {
 function renderBetLog() {
   const bets = state.bets || [];
   const body = document.getElementById('bet-log-body');
+  const authed = checkAuth();
+
+  // Show/hide the add-bet button in the card header
+  const addBtn = document.querySelector('#tab-kassa .card-header button');
+  if (addBtn) addBtn.style.display = authed ? '' : 'none';
 
   if (bets.length === 0) {
     body.innerHTML = `
       <div class="empty-bets">
         <div class="icon">🎲</div>
         <div>Inga spel registrerade ännu.</div>
-        <div style="margin-top:12px">
-          <button class="btn btn-primary" onclick="openModal()">+ Lägg till första spel</button>
-        </div>
+        ${authed ? '<div style="margin-top:12px"><button class="btn btn-primary" onclick="openModal()">+ Lägg till första spel</button></div>' : ''}
       </div>`;
     return;
   }
@@ -640,7 +678,7 @@ function renderBetLog() {
         <td><span class="badge ${isWin ? 'badge-win' : 'badge-loss'}">${isWin ? 'Vinst' : 'Förlust'}</span></td>
         <td class="num ${pnlClass}">${fmtKrPlus(b.vinst_kr)}</td>
         <td class="num">${b.kassa_efter.toLocaleString('sv-SE')} kr</td>
-        <td><button class="btn-ghost" onclick="deleteBet(${b.id})" title="Ta bort">🗑</button></td>
+        ${authed ? `<td><button class="btn-ghost" onclick="deleteBet(${b.id})" title="Ta bort">🗑</button></td>` : '<td></td>'}
       </tr>`;
   });
 
@@ -746,6 +784,9 @@ function renderPlayers() {
 
 // ── MODAL ──
 function openModal() {
+  requireAuth(_openModalInternal);
+}
+function _openModalInternal() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('f-datum').value = today;
   document.getElementById('f-beskrivning').value = '';
@@ -822,7 +863,10 @@ async function submitBet() {
   await saveData();
 }
 
-async function deleteBet(id) {
+function deleteBet(id) {
+  requireAuth(() => _deleteBetInternal(id));
+}
+async function _deleteBetInternal(id) {
   if (!confirm('Ta bort detta spel?')) return;
   const idx = state.bets.findIndex(b => b.id === id);
   if (idx === -1) return;
