@@ -146,6 +146,10 @@ tbody tr.row-pending:hover { background: #fff8dc; }
 .bet-card-pnl { font-size: 15px; font-weight: 700; }
 .bet-card-kassa { font-size: 11px; color: var(--muted); margin-top: 1px; }
 .bet-card-actions { margin-top: 8px; display: flex; gap: 4px; justify-content: flex-end; }
+.bet-forecast { margin-top: 7px; font-size: 12px; display: flex; gap: 6px; align-items: center; }
+.forecast-win  { color: var(--win);  font-weight: 600; }
+.forecast-loss { color: var(--loss); font-weight: 600; }
+.forecast-sep  { color: var(--muted); }
 .odds-pill {
   display: inline-block; min-width: 38px; text-align: center;
   padding: 2px 6px; border-radius: 6px; background: var(--light-bg);
@@ -623,6 +627,16 @@ function renderBetLog() {
     const pnlText    = isPending
       ? `−${b.belopp.toLocaleString('sv-SE')} kr`
       : fmtKrPlus(b.vinst_kr);
+    let forecastHtml = '';
+    if (isPending && b.odds) {
+      const winKassa  = b.kassa_fore + Math.round(b.belopp * b.odds) - b.belopp;
+      const lossKassa = b.kassa_fore - b.belopp;
+      forecastHtml = `<div class="bet-forecast">
+        <span class="forecast-win">Vinst: ${winKassa.toLocaleString('sv-SE')} kr</span>
+        <span class="forecast-sep">·</span>
+        <span class="forecast-loss">Förlust: ${lossKassa.toLocaleString('sv-SE')} kr</span>
+      </div>`;
+    }
     cards += `<div class="bet-card${isPending ? ' pending' : ''}">
       <div class="bet-card-top">
         <span class="bet-card-num">#${i + 1} · ${fmtDate(b.datum)}</span>
@@ -636,10 +650,11 @@ function renderBetLog() {
           <div class="bet-card-kassa">Kassa: ${b.kassa_efter.toLocaleString('sv-SE')} kr</div>
         </div>
       </div>
-      ${authed ? `<div class="bet-card-actions">
+      ${forecastHtml}
+      <div class="bet-card-actions">
         <button class="btn-ghost" onclick="editBet(${b.id})">✏️ Redigera</button>
         <button class="btn-ghost" onclick="deleteBet(${b.id})">🗑 Ta bort</button>
-      </div>` : ''}
+      </div>
     </div>`;
   });
 
