@@ -124,6 +124,28 @@ tbody tr.row-pending { background: #fffdf0; }
 tbody tr.row-pending:hover { background: #fff8dc; }
 .pnl-pos { color: var(--win);  font-weight: 600; }
 .pnl-neg { color: var(--loss); font-weight: 600; }
+
+/* ── BET CARDS ── */
+.bet-card {
+  padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.bet-card:last-child { border-bottom: none; }
+.bet-card.pending { background: #fffdf0; }
+.bet-card-top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
+}
+.bet-card-num { font-size: 11px; color: var(--muted); }
+.bet-card-desc { font-weight: 600; font-size: 14px; margin-bottom: 6px; line-height: 1.35; }
+.bet-card-meta {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px;
+}
+.bet-card-left { color: var(--muted); }
+.bet-card-right { text-align: right; }
+.bet-card-pnl { font-size: 15px; font-weight: 700; }
+.bet-card-kassa { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.bet-card-actions { margin-top: 8px; display: flex; gap: 4px; justify-content: flex-end; }
 .odds-pill {
   display: inline-block; min-width: 38px; text-align: center;
   padding: 2px 6px; border-radius: 6px; background: var(--light-bg);
@@ -591,41 +613,37 @@ function renderBetLog() {
     return;
   }
 
-  let rows = '';
+  let cards = '';
   bets.forEach((b, i) => {
-    const isPending = b.resultat === 'pagaende';
-    const isWin     = b.resultat === 'vinst';
+    const isPending  = b.resultat === 'pagaende';
+    const isWin      = b.resultat === 'vinst';
     const badgeClass = isPending ? 'badge-pending' : isWin ? 'badge-win' : 'badge-loss';
     const badgeLabel = isPending ? 'Pågående'      : isWin ? 'Vinst'     : 'Förlust';
     const pnlClass   = isPending ? 'pnl-pending'   : isWin ? 'pnl-pos'   : 'pnl-neg';
     const pnlText    = isPending
       ? `−${b.belopp.toLocaleString('sv-SE')} kr`
       : fmtKrPlus(b.vinst_kr);
-    rows += `<tr class="${isPending ? 'row-pending' : ''}">
-      <td class="muted num">${i + 1}</td>
-      <td class="muted">${fmtDate(b.datum)}</td>
-      <td class="bold">${esc(b.beskrivning || '–')}</td>
-      <td class="num">${b.belopp.toLocaleString('sv-SE')} kr</td>
-      <td class="num">${Number(b.odds).toFixed(2)}</td>
-      <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
-      <td class="num ${pnlClass}">${pnlText}</td>
-      <td class="num">${b.kassa_efter.toLocaleString('sv-SE')} kr</td>
-      ${authed ? `<td style="white-space:nowrap">
-        <button class="btn-ghost" onclick="editBet(${b.id})" title="Redigera">✏️</button>
-        <button class="btn-ghost" onclick="deleteBet(${b.id})" title="Ta bort">🗑</button>
-      </td>` : '<td></td>'}
-    </tr>`;
+    cards += `<div class="bet-card${isPending ? ' pending' : ''}">
+      <div class="bet-card-top">
+        <span class="bet-card-num">#${i + 1} · ${fmtDate(b.datum)}</span>
+        <span class="badge ${badgeClass}">${badgeLabel}</span>
+      </div>
+      <div class="bet-card-desc">${esc(b.beskrivning || '–')}</div>
+      <div class="bet-card-meta">
+        <div class="bet-card-left">${b.belopp.toLocaleString('sv-SE')} kr &nbsp;·&nbsp; @${Number(b.odds).toFixed(2)}</div>
+        <div class="bet-card-right">
+          <div class="bet-card-pnl ${pnlClass}">${pnlText}</div>
+          <div class="bet-card-kassa">Kassa: ${b.kassa_efter.toLocaleString('sv-SE')} kr</div>
+        </div>
+      </div>
+      ${authed ? `<div class="bet-card-actions">
+        <button class="btn-ghost" onclick="editBet(${b.id})">✏️ Redigera</button>
+        <button class="btn-ghost" onclick="deleteBet(${b.id})">🗑 Ta bort</button>
+      </div>` : ''}
+    </div>`;
   });
 
-  body.innerHTML = `
-    <div class="table-wrap"><table>
-      <thead><tr>
-        <th class="num">#</th><th>Datum</th><th>Match</th>
-        <th class="num">Belopp</th><th class="num">Odds</th><th>Resultat</th>
-        <th class="num">+/- kr</th><th class="num">Kassa efter</th><th></th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>`;
+  body.innerHTML = cards;
 }
 
 function renderMatches() {
