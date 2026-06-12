@@ -250,20 +250,6 @@ tbody tr.row-pending:hover { background: #fff8dc; }
       </div>
     </div>
 
-    <!-- KOMMANDE VM-MATCHER -->
-    <div class="card">
-      <div class="card-header">
-        <h2>⚽ Kommande VM-matcher</h2>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="matches-meta" id="matches-updated"></span>
-          <button class="btn btn-outline btn-sm" onclick="refreshMatches()">↺</button>
-        </div>
-      </div>
-      <div id="matches-body">
-        <div class="loading-row">Hämtar matcher från Svenska Spel...</div>
-      </div>
-    </div>
-
     <!-- SPELLOG -->
     <div class="card">
       <div class="card-header">
@@ -283,6 +269,20 @@ tbody tr.row-pending:hover { background: #fff8dc; }
       </div>
       <div class="card-body">
         <div class="player-grid" id="player-grid"></div>
+      </div>
+    </div>
+
+    <!-- KOMMANDE VM-MATCHER -->
+    <div class="card">
+      <div class="card-header">
+        <h2>⚽ Kommande VM-matcher</h2>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="matches-meta" id="matches-updated"></span>
+          <button class="btn btn-outline btn-sm" onclick="refreshMatches()">↺</button>
+        </div>
+      </div>
+      <div id="matches-body">
+        <div class="loading-row">Hämtar matcher från Svenska Spel...</div>
       </div>
     </div>
 
