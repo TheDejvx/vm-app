@@ -69,8 +69,8 @@ def scrape_matches():
         r = req.get('https://worldcup26.ir/get/games',
                     headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
         if r.ok:
-            for g in r.json():
-                if g.get('finished', False):
+            for g in r.json().get('games', []):
+                if g.get('finished', 'FALSE') == 'TRUE':
                     continue
                 date_str = g.get('local_date', '')  # "06/12/2026 15:00"
                 if not date_str:
