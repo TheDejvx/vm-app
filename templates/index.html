@@ -185,6 +185,19 @@ tbody tr.row-pending:hover { background: #fff8dc; }
 }
 .auth-error { color: var(--danger); font-size: 13px; margin-top: 8px; display: none; }
 
+/* ── INSTALL CARD ── */
+.install-card {
+  background: var(--primary-dark); border-radius: 12px;
+  padding: 16px; margin-bottom: 16px; color: var(--white);
+}
+.install-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 12px; opacity: .85; letter-spacing: .3px; }
+.install-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .install-steps { grid-template-columns: 1fr; } }
+.install-platform { background: rgba(255,255,255,.08); border-radius: 8px; padding: 12px 14px; }
+.install-platform .plat-name { font-size: 12px; font-weight: 700; margin-bottom: 8px; opacity: .7; text-transform: uppercase; letter-spacing: .5px; }
+.install-platform ol { padding-left: 16px; font-size: 13px; line-height: 1.7; opacity: .9; }
+.install-platform .icon { font-style: normal; }
+
 /* ── MISC ── */
 .loading-row { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 13px; }
 .no-data { text-align: center; padding: 28px 16px; color: var(--muted); }
@@ -270,6 +283,29 @@ tbody tr.row-pending:hover { background: #fff8dc; }
       </div>
       <div class="card-body">
         <div class="player-grid" id="player-grid"></div>
+      </div>
+    </div>
+
+    <!-- INSTALL AS APP -->
+    <div class="install-card">
+      <h3>📲 Lägg till som app på hemskärmen</h3>
+      <div class="install-steps">
+        <div class="install-platform">
+          <div class="plat-name">Android (Chrome)</div>
+          <ol>
+            <li>Tryck på <i class="icon">⋮</i> menyn uppe till höger</li>
+            <li>Välj <strong>Lägg till på startskärmen</strong></li>
+            <li>Tryck <strong>Lägg till</strong></li>
+          </ol>
+        </div>
+        <div class="install-platform">
+          <div class="plat-name">iPhone (Safari)</div>
+          <ol>
+            <li>Tryck på dela-ikonen <i class="icon">⬆</i> längst ner</li>
+            <li>Välj <strong>Lägg till på hemskärmen</strong></li>
+            <li>Tryck <strong>Lägg till</strong></li>
+          </ol>
+        </div>
       </div>
     </div>
 
