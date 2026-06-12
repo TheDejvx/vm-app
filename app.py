@@ -260,7 +260,7 @@ def scrape_matches():
         print(f'Oddset enrichment error: {e}')
 
     wc_matches.sort(key=lambda x: x['start_ts'])
-    _matches_cache = wc_matches[:30]
+    _matches_cache = wc_matches[:10]
     _last_scraped = datetime.now(timezone.utc)
     print(f'Scraped {len(_matches_cache)} VM matches')
     return _matches_cache
