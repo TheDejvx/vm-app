@@ -169,6 +169,22 @@ def get_matches():
         'last_updated': _last_scraped.isoformat() if _last_scraped else None
     })
 
+@app.route('/api/debug')
+def debug():
+    import requests as req
+    result = {'cache_size': len(_matches_cache), 'last_scraped': _last_scraped.isoformat() if _last_scraped else None}
+    try:
+        r = req.get('https://worldcup26.ir/get/games', headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+        games = r.json().get('games', [])
+        not_finished = [g for g in games if g.get('finished', 'FALSE') != 'TRUE']
+        result['wc_api_status'] = r.status_code
+        result['wc_total_games'] = len(games)
+        result['wc_not_finished'] = len(not_finished)
+        result['sample_finished_field'] = repr(games[0].get('finished')) if games else None
+    except Exception as e:
+        result['wc_api_error'] = str(e)
+    return jsonify(result)
+
 @app.route('/api/refresh-matches', methods=['POST'])
 def refresh_matches():
     scrape_matches()
