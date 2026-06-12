@@ -644,26 +644,31 @@ function renderMatches() {
   let rows = '';
   matchesData.forEach(m => {
     const groupLabel = fmtGroup(m);
+    let sweDate = '', sweTime = '';
+    if (m.start_utc_ts) {
+      const d = new Date(m.start_utc_ts * 1000);
+      sweDate = d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm', weekday: 'short', day: 'numeric', month: 'short' });
+      sweTime = d.toLocaleTimeString('sv-SE', { timeZone: 'Europe/Stockholm', hour: '2-digit', minute: '2-digit' });
+    } else {
+      sweDate = fmtMatchDate(m.start);
+      sweTime = fmtMatchTime(m.start);
+    }
     rows += `<tr>
-      <td class="muted">${fmtMatchDate(m.start)}</td>
-      <td class="muted">${fmtMatchTime(m.start)}</td>
+      <td class="muted">${sweDate}</td>
+      <td class="muted">${sweTime}</td>
       <td class="muted" style="font-size:11px">${esc(groupLabel)}</td>
       <td class="bold">${esc(m.hemma)} <span style="color:var(--muted);font-weight:400">–</span> ${esc(m.borta)}</td>
-      <td class="ctr"><span class="odds-pill">${fmtOdds(m.odds_1)}</span></td>
-      <td class="ctr"><span class="odds-pill">${fmtOdds(m.odds_x)}</span></td>
-      <td class="ctr"><span class="odds-pill">${fmtOdds(m.odds_2)}</span></td>
     </tr>`;
   });
 
   body.innerHTML = `
     <div class="table-wrap"><table>
       <thead><tr>
-        <th>Datum</th><th>Tid (lokal)</th><th>Grupp</th><th>Match</th>
-        <th class="ctr">1</th><th class="ctr">X</th><th class="ctr">2</th>
+        <th>Datum (SWE)</th><th>Tid (SWE)</th><th>Grupp</th><th>Match</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
-    <div style="padding:8px 16px;font-size:11px;color:var(--muted)">Tider visas i lokal stadiontid · Odds från Svenska Spel VM-tipset</div>`;
+    <div style="padding:8px 16px;font-size:11px;color:var(--muted)">Tider visas i svensk tid (CEST)</div>`;
 }
 
 function renderPlayers() {

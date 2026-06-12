@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import json, os, threading, time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 app = Flask(__name__)
 DATA_FILE = os.path.join(os.path.dirname(__file__), 'vm_data.json')
@@ -90,6 +90,15 @@ SV_TO_EN = {
     'tanzania': 'tanzania', 'zambia': 'zambia', 'angola': 'angola',
     'guinea': 'guinea', 'kap verde': 'cape verde', 'namibia': 'namibia',
     'kenya': 'kenya', 'kongo': 'dr congo',
+}
+
+# stadium_id → UTC offset (summer 2026, DST in effect)
+STADIUM_UTC_OFFSET = {
+    1: -5, 2: -5, 3: -5,          # Mexico City, Guadalajara, Monterrey (CDT)
+    4: -5, 5: -5, 6: -5,          # Dallas, Houston, Kansas City (CDT)
+    7: -4, 8: -4, 9: -4,          # Atlanta, Miami, Boston (EDT)
+    10: -4, 11: -4, 12: -4,       # Philadelphia, New York, Toronto (EDT)
+    13: -7, 14: -7, 15: -7, 16: -7,  # Vancouver, Seattle, SF, LA (PDT)
 }
 
 def sv_to_en(name):
@@ -233,11 +242,19 @@ def scrape_matches():
                     dt = datetime.strptime(date_str, '%m/%d/%Y %H:%M')
                 except Exception:
                     continue
+                stadium_id = int(g.get('stadium_id', 0) or 0)
+                offset = STADIUM_UTC_OFFSET.get(stadium_id)
+                if offset is not None:
+                    dt_utc = dt - timedelta(hours=offset)
+                    start_utc_ts = int(dt_utc.replace(tzinfo=timezone.utc).timestamp())
+                else:
+                    start_utc_ts = None
                 wc_matches.append({
                     'hemma': g.get('home_team_name_en', ''),
                     'borta': g.get('away_team_name_en', ''),
                     'start': date_str,
-                    'start_ts': dt.timestamp(),
+                    'start_ts': start_utc_ts if start_utc_ts else dt.timestamp(),
+                    'start_utc_ts': start_utc_ts,
                     'group': g.get('group', ''),
                     'match_type': g.get('type', 'group'),
                     'odds_1': None, 'odds_x': None, 'odds_2': None,
