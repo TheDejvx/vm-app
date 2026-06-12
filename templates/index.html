@@ -11,19 +11,16 @@
   --bg: #162116;
   --primary: #2d5a27;
   --primary-dark: #1a3a16;
-  --primary-light: #3a7032;
   --text: #1a1a1a;
   --white: #ffffff;
   --light-bg: #f6f7f5;
   --border: #e0e0e0;
   --muted: #888;
   --danger: #c0392b;
-  --danger-bg: #fdf0ef;
   --win: #1e7e34;
   --win-bg: #eafaf0;
   --loss: #c0392b;
   --loss-bg: #fdf0ef;
-  --gold: #c8a000;
 }
 
 body {
@@ -34,22 +31,7 @@ body {
   font-size: 15px;
 }
 
-/* ── AUTH ── */
-.auth-error { color: var(--danger); font-size: 13px; margin-top: 8px; display:none; }
-
-/* ── LOCK BUTTON ── */
-.lock-btn {
-  background: transparent; border: 1.5px solid rgba(255,255,255,.35);
-  color: rgba(255,255,255,.75); border-radius: 8px;
-  padding: 5px 11px; font-size: 12px; font-weight: 600; cursor: pointer;
-  transition: all .15s; white-space: nowrap;
-}
-.lock-btn:hover { border-color: rgba(255,255,255,.8); color: var(--white); }
-.lock-btn.unlocked { border-color: rgba(144,238,144,.55); color: #90ee90; }
-
-/* ── APP SHELL ── */
-#app { display: block; }
-
+/* ── HEADER ── */
 .app-header {
   background: var(--primary-dark);
   padding: 0 16px;
@@ -62,35 +44,23 @@ body {
   color: var(--white); font-size: 17px; font-weight: 700;
   display: flex; align-items: center; gap: 8px;
 }
-.app-header h1 span.flag { font-size: 22px; }
-.save-status {
-  font-size: 12px; color: rgba(255,255,255,.7);
-  transition: opacity .3s;
-}
+.header-right { display: flex; align-items: center; gap: 10px; }
+.save-status { font-size: 12px; color: rgba(255,255,255,.7); }
 .save-status.saving { color: #ffd700; }
-.save-status.saved { color: #90ee90; }
+.save-status.saved  { color: #90ee90; }
 
-.tab-bar {
-  background: var(--primary);
-  display: flex;
-  position: sticky; top: 52px; z-index: 99;
-}
-.tab-btn {
-  flex: 1; padding: 12px 4px; border: none;
-  background: transparent; color: rgba(255,255,255,.7);
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  border-bottom: 3px solid transparent;
+/* ── LOCK BUTTON ── */
+.lock-btn {
+  background: transparent; border: 1.5px solid rgba(255,255,255,.35);
+  color: rgba(255,255,255,.75); border-radius: 8px;
+  padding: 5px 11px; font-size: 12px; font-weight: 600; cursor: pointer;
   transition: all .15s; white-space: nowrap;
 }
-.tab-btn.active {
-  color: var(--white);
-  border-bottom-color: var(--white);
-  background: rgba(255,255,255,.08);
-}
-.tab-btn:hover:not(.active) { color: var(--white); background: rgba(255,255,255,.05); }
+.lock-btn:hover { border-color: rgba(255,255,255,.8); color: var(--white); }
+.lock-btn.unlocked { border-color: rgba(144,238,144,.55); color: #90ee90; }
 
-.tab-content { display: none; padding: 16px; max-width: 900px; margin: 0 auto; }
-.tab-content.active { display: block; }
+/* ── PAGE ── */
+.page-content { padding: 14px 16px 32px; max-width: 900px; margin: 0 auto; }
 
 /* ── CARDS ── */
 .card {
@@ -99,11 +69,11 @@ body {
   margin-bottom: 16px; overflow: hidden;
 }
 .card-header {
-  padding: 14px 16px 10px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
 }
-.card-header h2 { font-size: 15px; font-weight: 700; color: var(--primary-dark); }
+.card-header h2 { font-size: 14px; font-weight: 700; color: var(--primary-dark); }
 .card-body { padding: 16px; }
 
 /* ── SUMMARY BAR ── */
@@ -114,12 +84,12 @@ body {
   margin-bottom: 16px; overflow: hidden;
 }
 .summary-item {
-  padding: 14px 12px; text-align: center;
+  padding: 13px 10px; text-align: center;
   border-right: 1px solid var(--border);
 }
 .summary-item:last-child { border-right: none; }
-.summary-item .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
-.summary-item .value { font-size: 20px; font-weight: 700; color: var(--primary-dark); }
+.summary-item .label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 3px; }
+.summary-item .value { font-size: 19px; font-weight: 700; color: var(--primary-dark); }
 .summary-item .value.positive { color: var(--win); }
 .summary-item .value.negative { color: var(--loss); }
 
@@ -127,28 +97,34 @@ body {
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 thead th {
-  background: var(--light-bg); padding: 9px 10px;
+  background: var(--light-bg); padding: 8px 10px;
   text-align: left; font-size: 11px; font-weight: 700;
   color: var(--muted); text-transform: uppercase; letter-spacing: .4px;
   white-space: nowrap; border-bottom: 2px solid var(--border);
 }
 thead th.num { text-align: right; }
-tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+thead th.ctr { text-align: center; }
+tbody tr { border-bottom: 1px solid var(--border); }
 tbody tr:last-child { border-bottom: none; }
 tbody tr:hover { background: var(--light-bg); }
-td { padding: 9px 10px; vertical-align: middle; }
+td { padding: 8px 10px; vertical-align: middle; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
-td.date { color: var(--muted); font-size: 12px; white-space: nowrap; }
-td.match-desc { font-weight: 600; }
-td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
+td.ctr { text-align: center; }
+td.muted { color: var(--muted); font-size: 12px; white-space: nowrap; }
+td.bold { font-weight: 600; }
 .badge {
   display: inline-block; padding: 2px 8px; border-radius: 12px;
   font-size: 11px; font-weight: 700; white-space: nowrap;
 }
-.badge-win { background: var(--win-bg); color: var(--win); }
+.badge-win  { background: var(--win-bg);  color: var(--win);  }
 .badge-loss { background: var(--loss-bg); color: var(--loss); }
-.pnl-pos { color: var(--win); font-weight: 600; }
+.pnl-pos { color: var(--win);  font-weight: 600; }
 .pnl-neg { color: var(--loss); font-weight: 600; }
+.odds-pill {
+  display: inline-block; min-width: 38px; text-align: center;
+  padding: 2px 6px; border-radius: 6px; background: var(--light-bg);
+  font-size: 12px; font-weight: 600; color: var(--primary-dark);
+}
 
 /* ── BUTTONS ── */
 .btn {
@@ -165,97 +141,65 @@ td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
   border: 1.5px solid var(--primary);
 }
 .btn-outline:hover { background: var(--primary); color: var(--white); }
-.btn-danger { background: transparent; color: var(--danger); border: 1.5px solid var(--danger); }
-.btn-danger:hover { background: var(--danger); color: var(--white); }
-.btn-ghost {
-  background: transparent; color: var(--muted);
-  border: none; padding: 4px 6px;
-}
+.btn-ghost { background: transparent; color: var(--muted); border: none; padding: 4px 6px; cursor: pointer; }
 .btn-ghost:hover { color: var(--danger); }
 
 /* ── MODAL ── */
-#modal-overlay {
+.modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.5);
   display: none; align-items: center; justify-content: center;
   z-index: 500; padding: 16px;
 }
-#modal-overlay.open { display: flex; }
+.modal-overlay.open { display: flex; }
 .modal {
   background: var(--white); border-radius: 16px;
   width: 100%; max-width: 420px; box-shadow: 0 16px 60px rgba(0,0,0,.35);
   overflow: hidden;
 }
 .modal-header {
-  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  padding: 15px 20px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
 }
 .modal-header h3 { font-size: 16px; font-weight: 700; color: var(--primary-dark); }
 .modal-body { padding: 20px; }
 .form-row { margin-bottom: 14px; }
-.form-row label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
+.form-row label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
 .form-row input, .form-row select {
   width: 100%; padding: 10px 12px; border: 1.5px solid var(--border);
-  border-radius: 8px; font-size: 14px; outline: none; transition: border-color .15s;
-  background: var(--white); color: var(--text);
+  border-radius: 8px; font-size: 14px; outline: none;
+  background: var(--white); color: var(--text); transition: border-color .15s;
 }
 .form-row input:focus, .form-row select:focus { border-color: var(--primary); }
-.form-row .hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
 .form-preview {
-  background: var(--light-bg); border-radius: 8px; padding: 12px 14px;
-  margin-top: 4px; font-size: 13px;
+  background: var(--light-bg); border-radius: 8px; padding: 12px 14px; font-size: 13px;
 }
 .form-preview .row { display: flex; justify-content: space-between; margin-bottom: 4px; }
 .form-preview .row:last-child { margin-bottom: 0; font-weight: 700; font-size: 14px; }
 .modal-footer {
-  padding: 14px 20px; border-top: 1px solid var(--border);
+  padding: 13px 20px; border-top: 1px solid var(--border);
   display: flex; gap: 10px; justify-content: flex-end;
 }
+.auth-error { color: var(--danger); font-size: 13px; margin-top: 8px; display: none; }
 
-/* ── MATCHER TAB ── */
-.matcher-meta {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 12px; font-size: 12px; color: var(--muted);
-}
-.odds-pill {
-  display: inline-block; min-width: 36px; text-align: center;
-  padding: 2px 6px; border-radius: 6px; background: var(--light-bg);
-  font-size: 12px; font-weight: 600; color: var(--primary-dark);
-}
-.odds-pill.best { background: #e8f5e9; color: var(--win); }
-.no-data { text-align: center; padding: 40px 20px; color: var(--muted); }
-.no-data .icon { font-size: 40px; margin-bottom: 10px; }
-
-/* ── SPELARE TAB ── */
+/* ── MISC ── */
+.loading-row { text-align: center; padding: 28px 16px; color: var(--muted); font-size: 13px; }
+.no-data { text-align: center; padding: 28px 16px; color: var(--muted); }
+.no-data .icon { font-size: 36px; margin-bottom: 8px; }
 .player-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;
 }
 .player-card {
-  background: var(--white); border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.07);
-  padding: 14px 12px; text-align: center;
+  background: var(--light-bg); border-radius: 10px; padding: 13px 10px; text-align: center;
 }
-.player-card .player-name { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
-.player-card .player-share { font-size: 18px; font-weight: 700; color: var(--primary-dark); }
-.player-card .player-pnl { font-size: 12px; margin-top: 3px; }
-.player-card .player-initial { font-size: 11px; color: var(--muted); }
-
-/* ── SPINNER ── */
-.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: var(--white); border-radius: 50%; animation: spin .6s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-overlay { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 30px; color: var(--muted); }
-
-/* ── EMPTY BET LOG ── */
-.empty-bets { text-align: center; padding: 32px 16px; color: var(--muted); }
-.empty-bets .icon { font-size: 36px; margin-bottom: 8px; }
-
-/* ── PRODUCT TAG ── */
-.product-tag { font-size: 10px; color: var(--muted); background: var(--light-bg); padding: 2px 5px; border-radius: 4px; white-space: nowrap; }
+.player-card .name  { font-weight: 700; font-size: 13px; margin-bottom: 4px; }
+.player-card .share { font-size: 17px; font-weight: 700; color: var(--primary-dark); }
+.player-card .pnl   { font-size: 12px; margin-top: 2px; }
+.player-card .inkop { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.matches-meta { font-size: 11px; color: var(--muted); }
 
 @media (max-width: 480px) {
-  .summary-bar { grid-template-columns: repeat(3,1fr); }
-  .summary-item .value { font-size: 16px; }
-  .tab-btn { font-size: 12px; padding: 10px 2px; }
+  .summary-item .value { font-size: 15px; }
+  .summary-item .label { font-size: 9px; }
 }
 </style>
 </head>
@@ -264,22 +208,17 @@ td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
 <!-- MAIN APP -->
 <div id="app">
   <div class="app-header">
-    <h1><span class="flag">🏆</span> VM Bubblan 2026</h1>
-    <div style="display:flex;align-items:center;gap:10px">
+    <h1>🏆 VM Bubblan 2026</h1>
+    <div class="header-right">
       <span class="save-status" id="save-status"></span>
       <button class="lock-btn" id="lock-btn" onclick="toggleLock()">🔒 Lås upp</button>
     </div>
   </div>
 
-  <div class="tab-bar">
-    <button class="tab-btn active" onclick="showTab('kassa')" id="tab-btn-kassa">💰 Kassa</button>
-    <button class="tab-btn" onclick="showTab('matcher')" id="tab-btn-matcher">⚽ Matcher</button>
-    <button class="tab-btn" onclick="showTab('spelare')" id="tab-btn-spelare">👥 Spelare</button>
-  </div>
+  <div class="page-content">
 
-  <!-- KASSA TAB -->
-  <div class="tab-content active" id="tab-kassa">
-    <div class="summary-bar" id="summary-bar">
+    <!-- SUMMARY -->
+    <div class="summary-bar">
       <div class="summary-item">
         <div class="label">Aktuell kassa</div>
         <div class="value" id="sum-kassa">–</div>
@@ -289,52 +228,52 @@ td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
         <div class="value" id="sum-per-gubbe">–</div>
       </div>
       <div class="summary-item">
-        <div class="label">Vinst/förlust</div>
+        <div class="label">Vinst / förlust</div>
         <div class="value" id="sum-pnl">–</div>
       </div>
     </div>
 
+    <!-- KOMMANDE VM-MATCHER -->
     <div class="card">
       <div class="card-header">
-        <h2>Spellog</h2>
-        <button class="btn btn-primary btn-sm" onclick="openModal()">+ Lägg till spel</button>
+        <h2>⚽ Kommande VM-matcher</h2>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="matches-meta" id="matches-updated"></span>
+          <button class="btn btn-outline btn-sm" onclick="refreshMatches()">↺</button>
+        </div>
+      </div>
+      <div id="matches-body">
+        <div class="loading-row">Hämtar matcher från Svenska Spel...</div>
+      </div>
+    </div>
+
+    <!-- SPELLOG -->
+    <div class="card">
+      <div class="card-header">
+        <h2>💰 Spellog</h2>
+        <button class="btn btn-primary btn-sm" id="add-bet-btn" onclick="openModal()" style="display:none">+ Lägg till</button>
       </div>
       <div id="bet-log-body">
-        <div class="loading-overlay">Laddar...</div>
+        <div class="loading-row">Laddar...</div>
       </div>
     </div>
-  </div>
 
-  <!-- MATCHER TAB -->
-  <div class="tab-content" id="tab-matcher">
-    <div class="matcher-meta">
-      <span id="matches-updated">Laddar...</span>
-      <button class="btn btn-outline btn-sm" onclick="refreshMatches()">↺ Uppdatera</button>
-    </div>
-    <div class="card" id="matches-card">
-      <div class="card-header"><h2>Kommande matcher</h2></div>
-      <div id="matches-body">
-        <div class="loading-overlay">Hämtar matcher från Svenska Spel...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SPELARE TAB -->
-  <div class="tab-content" id="tab-spelare">
+    <!-- SPELTORSKAR -->
     <div class="card">
       <div class="card-header">
-        <h2>Speltorskar</h2>
-        <span style="font-size:12px;color:var(--muted)" id="speltorskar-meta"></span>
+        <h2>👥 Speltorskar</h2>
+        <span class="matches-meta" id="speltorskar-meta"></span>
       </div>
       <div class="card-body">
         <div class="player-grid" id="player-grid"></div>
       </div>
     </div>
+
   </div>
 </div>
 
 <!-- UNLOCK MODAL -->
-<div id="unlock-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:600;padding:16px">
+<div class="modal-overlay" id="unlock-modal">
   <div class="modal" style="max-width:320px">
     <div class="modal-header">
       <h3>🔒 Lås upp redigering</h3>
@@ -355,7 +294,7 @@ td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
 </div>
 
 <!-- ADD BET MODAL -->
-<div id="modal-overlay">
+<div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
       <h3>Lägg till spel</h3>
@@ -394,7 +333,7 @@ td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Avbryt</button>
-      <button class="btn btn-primary" onclick="submitBet()" id="submit-btn">Spara</button>
+      <button class="btn btn-primary" onclick="submitBet()">Spara</button>
     </div>
   </div>
 </div>
@@ -404,7 +343,6 @@ td.odds-cell { text-align: center; font-variant-numeric: tabular-nums; }
 const AUTH_KEY = 'vm_auth';
 const AUTH_PW  = 'vmgurra1337';
 const AUTH_TTL = 12 * 60 * 60 * 1000;
-
 let pendingAction = null;
 
 function checkAuth() {
@@ -415,12 +353,8 @@ function checkAuth() {
     return Date.now() - ts < AUTH_TTL;
   } catch { return false; }
 }
-function setAuth() {
-  localStorage.setItem(AUTH_KEY, JSON.stringify({ ts: Date.now() }));
-}
-function clearAuth() {
-  localStorage.removeItem(AUTH_KEY);
-}
+function setAuth()   { localStorage.setItem(AUTH_KEY, JSON.stringify({ ts: Date.now() })); }
+function clearAuth() { localStorage.removeItem(AUTH_KEY); }
 
 function requireAuth(action) {
   if (checkAuth()) { action(); return; }
@@ -431,19 +365,17 @@ function requireAuth(action) {
 function openUnlockModal() {
   document.getElementById('unlock-pw').value = '';
   document.getElementById('unlock-error').style.display = 'none';
-  document.getElementById('unlock-modal').style.display = 'flex';
+  document.getElementById('unlock-modal').classList.add('open');
   setTimeout(() => document.getElementById('unlock-pw').focus(), 100);
 }
 function closeUnlockModal() {
-  document.getElementById('unlock-modal').style.display = 'none';
+  document.getElementById('unlock-modal').classList.remove('open');
   pendingAction = null;
 }
 function submitUnlock() {
   const pw = document.getElementById('unlock-pw').value;
   if (pw === AUTH_PW) {
-    setAuth();
-    updateAuthUI();
-    closeUnlockModal();
+    setAuth(); updateAuthUI(); closeUnlockModal();
     if (pendingAction) { pendingAction(); pendingAction = null; }
   } else {
     document.getElementById('unlock-error').style.display = 'block';
@@ -456,43 +388,22 @@ document.getElementById('unlock-pw').addEventListener('keydown', e => {
 });
 
 function toggleLock() {
-  if (checkAuth()) {
-    clearAuth();
-    updateAuthUI();
-    render();
-  } else {
-    pendingAction = null;
-    openUnlockModal();
-  }
+  if (checkAuth()) { clearAuth(); updateAuthUI(); render(); }
+  else { pendingAction = null; openUnlockModal(); }
 }
-
 function updateAuthUI() {
   const authed = checkAuth();
   const btn = document.getElementById('lock-btn');
-  if (authed) {
-    btn.textContent = '🔓 Upplåst';
-    btn.classList.add('unlocked');
-    btn.title = 'Klicka för att låsa';
-  } else {
-    btn.textContent = '🔒 Lås upp';
-    btn.classList.remove('unlocked');
-    btn.title = 'Klicka för att låsa upp redigering';
-  }
+  btn.textContent = authed ? '🔓 Upplåst' : '🔒 Lås upp';
+  btn.classList.toggle('unlocked', authed);
+  const addBtn = document.getElementById('add-bet-btn');
+  if (addBtn) addBtn.style.display = authed ? '' : 'none';
 }
 
-// Boot – app always visible, no auth gate
-init();
-updateAuthUI();
-
 // ── STATE ──
-let state = {
-  speltorskar: [],
-  inkop_per_gubbe: 500,
-  bets: []
-};
+let state = { speltorskar: [], inkop_per_gubbe: 500, bets: [] };
 let matchesData = [];
 let matchesUpdated = null;
-let activeTab = 'kassa';
 
 // ── INIT ──
 async function init() {
@@ -503,12 +414,9 @@ async function init() {
 async function loadData() {
   try {
     const r = await fetch('/api/data');
-    const data = await r.json();
-    state = data;
+    state = await r.json();
     render();
-  } catch (e) {
-    console.error('loadData error', e);
-  }
+  } catch (e) { console.error('loadData', e); }
 }
 
 async function saveData() {
@@ -526,7 +434,6 @@ async function saveData() {
     alert('Kunde inte spara. Kontrollera nätverket.');
   }
 }
-
 function setSaveStatus(s) {
   const el = document.getElementById('save-status');
   el.className = 'save-status ' + s;
@@ -539,124 +446,80 @@ async function loadMatches() {
     const data = await r.json();
     matchesData = data.matches || [];
     matchesUpdated = data.last_updated;
-    renderMatches();
-  } catch (e) {
-    console.error('loadMatches error', e);
-    renderMatches();
-  }
+  } catch (e) { console.error('loadMatches', e); }
+  renderMatches();
 }
-
 async function refreshMatches() {
   document.getElementById('matches-updated').textContent = 'Uppdaterar...';
-  document.getElementById('matches-body').innerHTML = '<div class="loading-overlay">Hämtar från Svenska Spel...</div>';
+  document.getElementById('matches-body').innerHTML = '<div class="loading-row">Hämtar från Svenska Spel...</div>';
   try {
     const r = await fetch('/api/refresh-matches', { method: 'POST' });
     const data = await r.json();
     matchesData = data.matches || [];
     matchesUpdated = data.last_updated;
-  } catch (e) {
-    console.error(e);
-  }
+  } catch (e) { console.error(e); }
   renderMatches();
 }
 
-// ── TABS ──
-function showTab(name) {
-  activeTab = name;
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  document.getElementById('tab-btn-' + name).classList.add('active');
-}
-
 // ── KASSA CALCULATIONS ──
-function initialKassa() {
-  return (state.speltorskar || []).length * (state.inkop_per_gubbe || 500);
-}
+function initialKassa() { return (state.speltorskar || []).length * (state.inkop_per_gubbe || 500); }
 function currentKassa() {
-  if (!state.bets || state.bets.length === 0) return initialKassa();
+  if (!state.bets || !state.bets.length) return initialKassa();
   return state.bets[state.bets.length - 1].kassa_efter;
 }
-function totalPnl() {
-  return currentKassa() - initialKassa();
-}
+function totalPnl() { return currentKassa() - initialKassa(); }
 function recalculateKassa() {
   let kassa = initialKassa();
   for (const bet of state.bets) {
     bet.kassa_fore = kassa;
-    if (bet.resultat === 'vinst') {
-      bet.vinst_kr = Math.round(bet.belopp * bet.odds) - bet.belopp;
-    } else {
-      bet.vinst_kr = -bet.belopp;
-    }
+    bet.vinst_kr = bet.resultat === 'vinst' ? Math.round(bet.belopp * bet.odds) - bet.belopp : -bet.belopp;
     bet.kassa_efter = kassa + bet.vinst_kr;
     kassa = bet.kassa_efter;
   }
 }
 
-function fmtKr(n) {
-  if (n === null || n === undefined) return '–';
-  return (n >= 0 ? '' : '−') + Math.abs(n).toLocaleString('sv-SE') + ' kr';
-}
-function fmtKrPlus(n) {
-  if (n === null || n === undefined) return '–';
-  return (n >= 0 ? '+' : '−') + Math.abs(n).toLocaleString('sv-SE') + ' kr';
-}
-function fmtDate(s) {
-  if (!s) return '';
-  const d = new Date(s);
-  return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' });
-}
-function fmtDateTime(isoStr) {
-  if (!isoStr) return '';
-  const d = new Date(isoStr);
+// ── FORMAT ──
+function fmtKr(n)     { if (n == null) return '–'; return (n >= 0 ? '' : '−') + Math.abs(n).toLocaleString('sv-SE') + ' kr'; }
+function fmtKrPlus(n) { if (n == null) return '–'; return (n >= 0 ? '+' : '−') + Math.abs(n).toLocaleString('sv-SE') + ' kr'; }
+function fmtDate(s)   { if (!s) return ''; return new Date(s).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }); }
+function fmtDateTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
   const days = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
   const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
   return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
-function fmtTime(isoStr) {
-  if (!isoStr) return '';
-  const d = new Date(isoStr);
-  return d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-}
-function fmtOdds(n) {
-  if (n === null || n === undefined) return '–';
-  return Number(n).toFixed(2);
-}
+function fmtTime(iso) { if (!iso) return ''; return new Date(iso).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }); }
+function fmtOdds(n)   { return n != null ? Number(n).toFixed(2) : '–'; }
+function esc(s)       { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── RENDER ──
 function render() {
   renderSummary();
   renderBetLog();
   renderPlayers();
+  updateAuthUI();
 }
 
 function renderSummary() {
   const kassa = currentKassa();
   const antal = (state.speltorskar || []).length || 1;
-  const perGubbe = Math.round(kassa / antal);
-  const pnl = totalPnl();
-
-  document.getElementById('sum-kassa').textContent = kassa.toLocaleString('sv-SE') + ' kr';
-  document.getElementById('sum-per-gubbe').textContent = perGubbe.toLocaleString('sv-SE') + ' kr';
-
+  const pnl   = totalPnl();
+  document.getElementById('sum-kassa').textContent    = kassa.toLocaleString('sv-SE') + ' kr';
+  document.getElementById('sum-per-gubbe').textContent = Math.round(kassa / antal).toLocaleString('sv-SE') + ' kr';
   const pnlEl = document.getElementById('sum-pnl');
   pnlEl.textContent = fmtKrPlus(pnl);
   pnlEl.className = 'value ' + (pnl > 0 ? 'positive' : pnl < 0 ? 'negative' : '');
 }
 
 function renderBetLog() {
-  const bets = state.bets || [];
-  const body = document.getElementById('bet-log-body');
+  const bets   = state.bets || [];
   const authed = checkAuth();
-
-  // Show/hide the add-bet button in the card header
-  const addBtn = document.querySelector('#tab-kassa .card-header button');
-  if (addBtn) addBtn.style.display = authed ? '' : 'none';
+  const body   = document.getElementById('bet-log-body');
 
   if (bets.length === 0) {
     body.innerHTML = `
-      <div class="empty-bets">
+      <div class="no-data">
         <div class="icon">🎲</div>
         <div>Inga spel registrerade ännu.</div>
         ${authed ? '<div style="margin-top:12px"><button class="btn btn-primary" onclick="openModal()">+ Lägg till första spel</button></div>' : ''}
@@ -666,126 +529,92 @@ function renderBetLog() {
 
   let rows = '';
   bets.forEach((b, i) => {
-    const isWin = b.resultat === 'vinst';
-    const pnlClass = isWin ? 'pnl-pos' : 'pnl-neg';
-    rows += `
-      <tr>
-        <td class="date num">${i + 1}</td>
-        <td class="date">${fmtDate(b.datum)}</td>
-        <td class="match-desc">${esc(b.beskrivning || '–')}</td>
-        <td class="num">${b.belopp.toLocaleString('sv-SE')} kr</td>
-        <td class="num">${Number(b.odds).toFixed(2)}</td>
-        <td><span class="badge ${isWin ? 'badge-win' : 'badge-loss'}">${isWin ? 'Vinst' : 'Förlust'}</span></td>
-        <td class="num ${pnlClass}">${fmtKrPlus(b.vinst_kr)}</td>
-        <td class="num">${b.kassa_efter.toLocaleString('sv-SE')} kr</td>
-        ${authed ? `<td><button class="btn-ghost" onclick="deleteBet(${b.id})" title="Ta bort">🗑</button></td>` : '<td></td>'}
-      </tr>`;
+    const win = b.resultat === 'vinst';
+    rows += `<tr>
+      <td class="muted num">${i + 1}</td>
+      <td class="muted">${fmtDate(b.datum)}</td>
+      <td class="bold">${esc(b.beskrivning || '–')}</td>
+      <td class="num">${b.belopp.toLocaleString('sv-SE')} kr</td>
+      <td class="num">${Number(b.odds).toFixed(2)}</td>
+      <td><span class="badge ${win ? 'badge-win' : 'badge-loss'}">${win ? 'Vinst' : 'Förlust'}</span></td>
+      <td class="num ${win ? 'pnl-pos' : 'pnl-neg'}">${fmtKrPlus(b.vinst_kr)}</td>
+      <td class="num">${b.kassa_efter.toLocaleString('sv-SE')} kr</td>
+      ${authed ? `<td><button class="btn-ghost" onclick="deleteBet(${b.id})" title="Ta bort">🗑</button></td>` : '<td></td>'}
+    </tr>`;
   });
 
   body.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th class="num">#</th>
-          <th>Datum</th>
-          <th>Match</th>
-          <th class="num">Belopp</th>
-          <th class="num">Odds</th>
-          <th>Resultat</th>
-          <th class="num">+/- kr</th>
-          <th class="num">Kassa efter</th>
-          <th></th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th class="num">#</th><th>Datum</th><th>Match</th>
+        <th class="num">Belopp</th><th class="num">Odds</th><th>Resultat</th>
+        <th class="num">+/- kr</th><th class="num">Kassa efter</th><th></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
 }
 
 function renderMatches() {
   const upd = document.getElementById('matches-updated');
   if (matchesUpdated) {
     const d = new Date(matchesUpdated);
-    upd.textContent = 'Uppdaterad: ' + d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-  } else {
-    upd.textContent = '';
+    upd.textContent = 'Uppdaterad ' + d.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
   }
 
   const body = document.getElementById('matches-body');
-  if (!matchesData || matchesData.length === 0) {
-    body.innerHTML = `
-      <div class="no-data">
-        <div class="icon">📅</div>
-        <div>Inga kommande matcher hittades.<br>Svenska Spels VM-tipset kanske inte är öppet just nu.</div>
-      </div>`;
+  if (!matchesData || !matchesData.length) {
+    body.innerHTML = `<div class="no-data"><div class="icon">📅</div><div>Inga kommande VM-matcher hittades just nu.</div></div>`;
     return;
   }
 
   let rows = '';
   matchesData.forEach(m => {
-    const o1 = m.odds_1 ? `<span class="odds-pill">${fmtOdds(m.odds_1)}</span>` : '<span class="odds-pill">–</span>';
-    const ox = m.odds_x ? `<span class="odds-pill">${fmtOdds(m.odds_x)}</span>` : '<span class="odds-pill">–</span>';
-    const o2 = m.odds_2 ? `<span class="odds-pill">${fmtOdds(m.odds_2)}</span>` : '<span class="odds-pill">–</span>';
-    const productTag = m.product ? `<span class="product-tag">${esc(m.product)}</span>` : '';
-    rows += `
-      <tr>
-        <td class="date">${fmtDateTime(m.start)}</td>
-        <td class="date">${fmtTime(m.start)}</td>
-        <td class="match-desc">${esc(m.hemma)} <span style="color:var(--muted)">vs</span> ${esc(m.borta)} ${productTag}</td>
-        <td class="odds-cell">${o1}</td>
-        <td class="odds-cell">${ox}</td>
-        <td class="odds-cell">${o2}</td>
-      </tr>`;
+    rows += `<tr>
+      <td class="muted">${fmtDateTime(m.start)}</td>
+      <td class="muted">${fmtTime(m.start)}</td>
+      <td class="bold">${esc(m.hemma)} <span style="color:var(--muted);font-weight:400">–</span> ${esc(m.borta)}</td>
+      <td class="ctr"><span class="odds-pill">${fmtOdds(m.odds_1)}</span></td>
+      <td class="ctr"><span class="odds-pill">${fmtOdds(m.odds_x)}</span></td>
+      <td class="ctr"><span class="odds-pill">${fmtOdds(m.odds_2)}</span></td>
+    </tr>`;
   });
 
   body.innerHTML = `
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Datum</th>
-          <th>Tid</th>
-          <th>Match</th>
-          <th class="num">1</th>
-          <th class="num">X</th>
-          <th class="num">2</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-    <div style="padding:10px 16px;font-size:11px;color:var(--muted)">
-      Odds från Svenska Spel · Uppdateras varje timme
-    </div>`;
+    <div class="table-wrap"><table>
+      <thead><tr>
+        <th>Datum</th><th>Tid</th><th>Match</th>
+        <th class="ctr">1</th><th class="ctr">X</th><th class="ctr">2</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div style="padding:8px 16px;font-size:11px;color:var(--muted)">Odds från Svenska Spel VM-tipset · Uppdateras varje timme</div>`;
 }
 
 function renderPlayers() {
   const speltorskar = state.speltorskar || [];
-  const kassa = currentKassa();
-  const antal = speltorskar.length || 1;
-  const inkop = state.inkop_per_gubbe || 500;
-  const perGubbe = kassa / antal;
+  const kassa  = currentKassa();
+  const antal  = speltorskar.length || 1;
+  const inkop  = state.inkop_per_gubbe || 500;
+  const share  = Math.round(kassa / antal);
 
   document.getElementById('speltorskar-meta').textContent =
-    `${antal} st · ${inkop} kr/gubbe · Totalt: ${(antal * inkop).toLocaleString('sv-SE')} kr`;
+    `${antal} st · ${inkop} kr/gubbe`;
 
-  const grid = document.getElementById('player-grid');
-  grid.innerHTML = speltorskar.map(name => {
-    const share = Math.round(perGubbe);
+  document.getElementById('player-grid').innerHTML = speltorskar.map(name => {
     const pnl = share - inkop;
     const pnlClass = pnl > 0 ? 'pnl-pos' : pnl < 0 ? 'pnl-neg' : '';
-    const pnlStr = pnl >= 0 ? `+${pnl.toLocaleString('sv-SE')} kr` : `${pnl.toLocaleString('sv-SE')} kr`;
-    return `
-      <div class="player-card">
-        <div class="player-name">${esc(name)}</div>
-        <div class="player-share">${share.toLocaleString('sv-SE')} kr</div>
-        <div class="player-pnl ${pnlClass}">${pnlStr}</div>
-        <div class="player-initial">(köpte in: ${inkop.toLocaleString('sv-SE')} kr)</div>
-      </div>`;
+    const pnlStr   = (pnl >= 0 ? '+' : '') + pnl.toLocaleString('sv-SE') + ' kr';
+    return `<div class="player-card">
+      <div class="name">${esc(name)}</div>
+      <div class="share">${share.toLocaleString('sv-SE')} kr</div>
+      <div class="pnl ${pnlClass}">${pnlStr}</div>
+      <div class="inkop">Köpte in: ${inkop} kr</div>
+    </div>`;
   }).join('');
 }
 
-// ── MODAL ──
-function openModal() {
-  requireAuth(_openModalInternal);
-}
+// ── BET MODAL ──
+function openModal() { requireAuth(_openModalInternal); }
 function _openModalInternal() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('f-datum').value = today;
@@ -797,32 +626,21 @@ function _openModalInternal() {
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-belopp').focus(), 100);
 }
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
 
 function updatePreview() {
   const belopp = parseFloat(document.getElementById('f-belopp').value);
   const odds   = parseFloat(document.getElementById('f-odds').value);
   const result = document.getElementById('f-resultat').value;
   const preview = document.getElementById('form-preview');
-
   if (!belopp || !odds || !result) { preview.style.display = 'none'; return; }
-
   const kassa_fore = currentKassa();
-  let vinst_kr;
-  if (result === 'vinst') {
-    vinst_kr = Math.round(belopp * odds) - belopp;
-  } else {
-    vinst_kr = -belopp;
-  }
-  const kassa_efter = kassa_fore + vinst_kr;
-
+  const vinst_kr   = result === 'vinst' ? Math.round(belopp * odds) - belopp : -belopp;
   document.getElementById('prev-kassa-fore').textContent = fmtKr(kassa_fore);
-  document.getElementById('prev-pnl-label').textContent = result === 'vinst' ? 'Vinst' : 'Förlust';
-  document.getElementById('prev-pnl-kr').textContent = fmtKrPlus(vinst_kr);
-  document.getElementById('prev-pnl-kr').className = vinst_kr >= 0 ? 'pnl-pos' : 'pnl-neg';
-  document.getElementById('prev-kassa-efter').textContent = fmtKr(kassa_efter);
+  document.getElementById('prev-pnl-label').textContent  = result === 'vinst' ? 'Vinst' : 'Förlust';
+  document.getElementById('prev-pnl-kr').textContent     = fmtKrPlus(vinst_kr);
+  document.getElementById('prev-pnl-kr').className       = vinst_kr >= 0 ? 'pnl-pos' : 'pnl-neg';
+  document.getElementById('prev-kassa-efter').textContent = fmtKr(kassa_fore + vinst_kr);
   preview.style.display = 'block';
 }
 
@@ -832,40 +650,19 @@ async function submitBet() {
   const belopp      = parseFloat(document.getElementById('f-belopp').value);
   const odds        = parseFloat(document.getElementById('f-odds').value);
   const resultat    = document.getElementById('f-resultat').value;
-
   if (!datum || !belopp || belopp <= 0 || !odds || odds < 1 || !resultat) {
     alert('Fyll i datum, belopp (>0), odds (≥1.00) och resultat.');
     return;
   }
-
   const kassa_fore = currentKassa();
-  let vinst_kr;
-  if (resultat === 'vinst') {
-    vinst_kr = Math.round(belopp * odds) - belopp;
-  } else {
-    vinst_kr = -belopp;
-  }
-
-  state.bets.push({
-    id: Date.now(),
-    datum,
-    beskrivning,
-    belopp,
-    odds,
-    resultat,
-    vinst_kr,
-    kassa_fore,
-    kassa_efter: kassa_fore + vinst_kr
-  });
-
+  const vinst_kr   = resultat === 'vinst' ? Math.round(belopp * odds) - belopp : -belopp;
+  state.bets.push({ id: Date.now(), datum, beskrivning, belopp, odds, resultat, vinst_kr, kassa_fore, kassa_efter: kassa_fore + vinst_kr });
   closeModal();
   render();
   await saveData();
 }
 
-function deleteBet(id) {
-  requireAuth(() => _deleteBetInternal(id));
-}
+function deleteBet(id) { requireAuth(() => _deleteBetInternal(id)); }
 async function _deleteBetInternal(id) {
   if (!confirm('Ta bort detta spel?')) return;
   const idx = state.bets.findIndex(b => b.id === id);
@@ -876,20 +673,14 @@ async function _deleteBetInternal(id) {
   await saveData();
 }
 
-// ── UTIL ──
-function esc(s) {
-  if (!s) return '';
-  return String(s)
-    .replace(/&/g,'&amp;')
-    .replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
-}
-
-// Close modal on overlay click
-document.getElementById('modal-overlay').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
+// ── CLOSE ON BACKDROP ──
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) { if (e.target === this) { closeModal(); closeUnlockModal(); } });
 });
+
+// ── BOOT ──
+init();
+updateAuthUI();
 </script>
 </body>
 </html>

@@ -61,7 +61,7 @@ def scrape_matches():
     all_matches = []
     now = datetime.now(timezone.utc)
 
-    for product in ['europatipset', 'stryktipset']:
+    for product in ['europatipset']:
         try:
             r = req.get(
                 f'https://api.spela.svenskaspel.se/draw/1/{product}/draws',
