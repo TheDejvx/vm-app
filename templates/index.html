@@ -116,8 +116,12 @@ td.bold { font-weight: 600; }
   display: inline-block; padding: 2px 8px; border-radius: 12px;
   font-size: 11px; font-weight: 700; white-space: nowrap;
 }
-.badge-win  { background: var(--win-bg);  color: var(--win);  }
-.badge-loss { background: var(--loss-bg); color: var(--loss); }
+.badge-win     { background: var(--win-bg);  color: var(--win);  }
+.badge-loss    { background: var(--loss-bg); color: var(--loss); }
+.badge-pending { background: #fff3cd; color: #7a5000; }
+.pnl-pending   { color: var(--muted); font-style: italic; }
+tbody tr.row-pending { background: #fffdf0; }
+tbody tr.row-pending:hover { background: #fff8dc; }
 .pnl-pos { color: var(--win);  font-weight: 600; }
 .pnl-neg { color: var(--loss); font-weight: 600; }
 .odds-pill {
@@ -297,7 +301,7 @@ td.bold { font-weight: 600; }
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <h3>Lägg till spel</h3>
+      <h3 id="modal-title">Lägg till spel</h3>
       <button class="btn-ghost" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -321,6 +325,7 @@ td.bold { font-weight: 600; }
         <label>Resultat</label>
         <select id="f-resultat" onchange="updatePreview()">
           <option value="">Välj resultat...</option>
+          <option value="pagaende">Pågående</option>
           <option value="vinst">Vinst</option>
           <option value="forlust">Förlust</option>
         </select>
@@ -468,11 +473,16 @@ function currentKassa() {
   return state.bets[state.bets.length - 1].kassa_efter;
 }
 function totalPnl() { return currentKassa() - initialKassa(); }
+function betVinstKr(bet) {
+  if (bet.resultat === 'vinst')    return Math.round(bet.belopp * bet.odds) - bet.belopp;
+  if (bet.resultat === 'forlust')  return -bet.belopp;
+  return -bet.belopp; // pågående: stake is out
+}
 function recalculateKassa() {
   let kassa = initialKassa();
   for (const bet of state.bets) {
     bet.kassa_fore = kassa;
-    bet.vinst_kr = bet.resultat === 'vinst' ? Math.round(bet.belopp * bet.odds) - bet.belopp : -bet.belopp;
+    bet.vinst_kr   = betVinstKr(bet);
     bet.kassa_efter = kassa + bet.vinst_kr;
     kassa = bet.kassa_efter;
   }
@@ -547,17 +557,27 @@ function renderBetLog() {
 
   let rows = '';
   bets.forEach((b, i) => {
-    const win = b.resultat === 'vinst';
-    rows += `<tr>
+    const isPending = b.resultat === 'pagaende';
+    const isWin     = b.resultat === 'vinst';
+    const badgeClass = isPending ? 'badge-pending' : isWin ? 'badge-win' : 'badge-loss';
+    const badgeLabel = isPending ? 'Pågående'      : isWin ? 'Vinst'     : 'Förlust';
+    const pnlClass   = isPending ? 'pnl-pending'   : isWin ? 'pnl-pos'   : 'pnl-neg';
+    const pnlText    = isPending
+      ? `−${b.belopp.toLocaleString('sv-SE')} kr`
+      : fmtKrPlus(b.vinst_kr);
+    rows += `<tr class="${isPending ? 'row-pending' : ''}">
       <td class="muted num">${i + 1}</td>
       <td class="muted">${fmtDate(b.datum)}</td>
       <td class="bold">${esc(b.beskrivning || '–')}</td>
       <td class="num">${b.belopp.toLocaleString('sv-SE')} kr</td>
       <td class="num">${Number(b.odds).toFixed(2)}</td>
-      <td><span class="badge ${win ? 'badge-win' : 'badge-loss'}">${win ? 'Vinst' : 'Förlust'}</span></td>
-      <td class="num ${win ? 'pnl-pos' : 'pnl-neg'}">${fmtKrPlus(b.vinst_kr)}</td>
+      <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+      <td class="num ${pnlClass}">${pnlText}</td>
       <td class="num">${b.kassa_efter.toLocaleString('sv-SE')} kr</td>
-      ${authed ? `<td><button class="btn-ghost" onclick="deleteBet(${b.id})" title="Ta bort">🗑</button></td>` : '<td></td>'}
+      ${authed ? `<td style="white-space:nowrap">
+        <button class="btn-ghost" onclick="editBet(${b.id})" title="Redigera">✏️</button>
+        <button class="btn-ghost" onclick="deleteBet(${b.id})" title="Ta bort">🗑</button>
+      </td>` : '<td></td>'}
     </tr>`;
   });
 
@@ -634,32 +654,71 @@ function renderPlayers() {
 }
 
 // ── BET MODAL ──
+let editingBetId = null;
+
 function openModal() { requireAuth(_openModalInternal); }
 function _openModalInternal() {
+  editingBetId = null;
+  document.getElementById('modal-title').textContent = 'Lägg till spel';
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('f-datum').value = today;
   document.getElementById('f-beskrivning').value = '';
   document.getElementById('f-belopp').value = '';
   document.getElementById('f-odds').value = '';
-  document.getElementById('f-resultat').value = '';
+  document.getElementById('f-resultat').value = 'pagaende';
   document.getElementById('form-preview').style.display = 'none';
   document.getElementById('modal-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('f-belopp').focus(), 100);
+  setTimeout(() => document.getElementById('f-beskrivning').focus(), 100);
 }
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+
+function editBet(id) { requireAuth(() => _editBetInternal(id)); }
+function _editBetInternal(id) {
+  const bet = state.bets.find(b => b.id === id);
+  if (!bet) return;
+  editingBetId = id;
+  document.getElementById('modal-title').textContent = 'Redigera spel';
+  document.getElementById('f-datum').value       = bet.datum;
+  document.getElementById('f-beskrivning').value  = bet.beskrivning || '';
+  document.getElementById('f-belopp').value       = bet.belopp;
+  document.getElementById('f-odds').value         = bet.odds;
+  document.getElementById('f-resultat').value     = bet.resultat;
+  updatePreview();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('f-resultat').focus(), 100);
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  editingBetId = null;
+}
 
 function updatePreview() {
   const belopp = parseFloat(document.getElementById('f-belopp').value);
   const odds   = parseFloat(document.getElementById('f-odds').value);
   const result = document.getElementById('f-resultat').value;
   const preview = document.getElementById('form-preview');
-  if (!belopp || !odds || !result) { preview.style.display = 'none'; return; }
-  const kassa_fore = currentKassa();
-  const vinst_kr   = result === 'vinst' ? Math.round(belopp * odds) - belopp : -belopp;
-  document.getElementById('prev-kassa-fore').textContent = fmtKr(kassa_fore);
-  document.getElementById('prev-pnl-label').textContent  = result === 'vinst' ? 'Vinst' : 'Förlust';
-  document.getElementById('prev-pnl-kr').textContent     = fmtKrPlus(vinst_kr);
-  document.getElementById('prev-pnl-kr').className       = vinst_kr >= 0 ? 'pnl-pos' : 'pnl-neg';
+  if (!belopp || !result) { preview.style.display = 'none'; return; }
+  if (result === 'vinst' && !odds) { preview.style.display = 'none'; return; }
+
+  // For editing, use the bet's own kassa_fore so preview reflects its position in the sequence
+  let kassa_fore;
+  if (editingBetId !== null) {
+    const existing = state.bets.find(b => b.id === editingBetId);
+    kassa_fore = existing ? existing.kassa_fore : currentKassa();
+  } else {
+    kassa_fore = currentKassa();
+  }
+
+  let vinst_kr;
+  if (result === 'vinst')     vinst_kr = Math.round(belopp * odds) - belopp;
+  else if (result === 'forlust') vinst_kr = -belopp;
+  else                        vinst_kr = -belopp; // pågående
+
+  const label = result === 'vinst' ? 'Vinst' : result === 'forlust' ? 'Förlust' : 'Insats ute';
+  document.getElementById('prev-kassa-fore').textContent  = fmtKr(kassa_fore);
+  document.getElementById('prev-pnl-label').textContent   = label;
+  document.getElementById('prev-pnl-kr').textContent      = result === 'pagaende' ? `−${belopp.toLocaleString('sv-SE')} kr` : fmtKrPlus(vinst_kr);
+  document.getElementById('prev-pnl-kr').className        = vinst_kr > 0 ? 'pnl-pos' : (result === 'pagaende' ? 'pnl-pending' : 'pnl-neg');
   document.getElementById('prev-kassa-efter').textContent = fmtKr(kassa_fore + vinst_kr);
   preview.style.display = 'block';
 }
@@ -670,13 +729,26 @@ async function submitBet() {
   const belopp      = parseFloat(document.getElementById('f-belopp').value);
   const odds        = parseFloat(document.getElementById('f-odds').value);
   const resultat    = document.getElementById('f-resultat').value;
-  if (!datum || !belopp || belopp <= 0 || !odds || odds < 1 || !resultat) {
-    alert('Fyll i datum, belopp (>0), odds (≥1.00) och resultat.');
+
+  if (!datum || !belopp || belopp <= 0 || !resultat) {
+    alert('Fyll i datum, belopp och resultat.');
     return;
   }
-  const kassa_fore = currentKassa();
-  const vinst_kr   = resultat === 'vinst' ? Math.round(belopp * odds) - belopp : -belopp;
-  state.bets.push({ id: Date.now(), datum, beskrivning, belopp, odds, resultat, vinst_kr, kassa_fore, kassa_efter: kassa_fore + vinst_kr });
+  if (resultat === 'vinst' && (!odds || odds < 1)) {
+    alert('Fyll i odds (≥1.00) för en vinst.');
+    return;
+  }
+
+  if (editingBetId !== null) {
+    const idx = state.bets.findIndex(b => b.id === editingBetId);
+    if (idx !== -1) {
+      state.bets[idx] = { ...state.bets[idx], datum, beskrivning, belopp, odds: odds || state.bets[idx].odds, resultat };
+    }
+  } else {
+    state.bets.push({ id: Date.now(), datum, beskrivning, belopp, odds: odds || 0, resultat, vinst_kr: 0, kassa_fore: 0, kassa_efter: 0 });
+  }
+
+  recalculateKassa();
   closeModal();
   render();
   await saveData();
