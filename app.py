@@ -154,8 +154,6 @@ def scrape_matches():
                     ox = parse_odds(odds.get('x'))
                     o2 = parse_odds(odds.get('two'))
                     for wm in wc_matches:
-                        if wm['iso_date'] != ev_date:
-                            continue
                         wm_h = name_key(wm['hemma'])
                         wm_a = name_key(wm['borta'])
                         if wm_h == sv_h and wm_a == sv_a:
@@ -167,7 +165,7 @@ def scrape_matches():
         print(f'VM-tipset odds error: {e}')
 
     wc_matches.sort(key=lambda x: x['start_ts'])
-    _matches_cache = [{k: v for k, v in m.items() if k != 'iso_date'} for m in wc_matches[:15]]
+    _matches_cache = [{k: v for k, v in m.items() if k != 'iso_date'} for m in wc_matches[:30]]
     _last_scraped = datetime.now(timezone.utc)
     print(f'Scraped {len(_matches_cache)} VM matches')
     return _matches_cache
@@ -223,6 +221,43 @@ def debug():
         result['sample_finished_field'] = repr(games[0].get('finished')) if games else None
     except Exception as e:
         result['wc_api_error'] = str(e)
+    return jsonify(result)
+
+@app.route('/api/debug-odds')
+def debug_odds():
+    import requests as req
+    result = {'vmtipset': [], 'worldcup': []}
+    try:
+        r = req.get('https://api.spela.svenskaspel.se/draw/1/europatipset/draws',
+                    headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        if r.ok:
+            for draw in r.json().get('draws', []):
+                for ev in draw.get('drawEvents', []):
+                    match = ev.get('match', {})
+                    participants = match.get('participants', [])
+                    h = participants[0].get('name', '') if participants else ''
+                    a = participants[1].get('name', '') if len(participants) > 1 else ''
+                    result['vmtipset'].append({
+                        'raw_h': h, 'raw_a': a,
+                        'en_h': sv_to_en(h), 'en_a': sv_to_en(a),
+                        'date': match.get('matchStart', '')[:10]
+                    })
+    except Exception as e:
+        result['vmtipset_error'] = str(e)
+    try:
+        r = req.get('https://worldcup26.ir/get/games',
+                    headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        if r.ok:
+            for g in r.json().get('games', []):
+                if g.get('finished', 'FALSE') == 'TRUE':
+                    continue
+                result['worldcup'].append({
+                    'h': name_key(g.get('home_team_name_en', '')),
+                    'a': name_key(g.get('away_team_name_en', '')),
+                    'date': g.get('local_date', '')[:10]
+                })
+    except Exception as e:
+        result['worldcup_error'] = str(e)
     return jsonify(result)
 
 @app.route('/api/refresh-matches', methods=['POST'])
