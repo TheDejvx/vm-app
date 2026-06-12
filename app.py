@@ -55,71 +55,81 @@ def parse_odds(val):
     except Exception:
         return None
 
+def name_key(s):
+    return s.lower().replace('-', ' ').replace('  ', ' ').strip()[:5]
+
 def scrape_matches():
     global _matches_cache, _last_scraped
     import requests as req
-    all_matches = []
-    now = datetime.now(timezone.utc)
 
-    for product in ['europatipset']:
-        try:
-            r = req.get(
-                f'https://api.spela.svenskaspel.se/draw/1/{product}/draws',
-                headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'},
-                timeout=15
-            )
-            if not r.ok:
-                continue
-            data = r.json()
-            for draw in data.get('draws', []):
-                product_name = draw.get('productName', product)
+    wc_matches = []
+
+    # Primary: worldcup26.ir — all 104 VM matches, free, no key
+    try:
+        r = req.get('https://worldcup26.ir/get/games',
+                    headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        if r.ok:
+            for g in r.json():
+                if g.get('finished', False):
+                    continue
+                date_str = g.get('local_date', '')  # "06/12/2026 15:00"
+                if not date_str:
+                    continue
+                try:
+                    dt = datetime.strptime(date_str, '%m/%d/%Y %H:%M')
+                except Exception:
+                    continue
+                parts = date_str.split(' ')[0].split('/')  # ["06","12","2026"]
+                iso_date = f"{parts[2]}-{parts[0]}-{parts[1]}" if len(parts) == 3 else ''
+                wc_matches.append({
+                    'hemma': g.get('home_team_name_en', ''),
+                    'borta': g.get('away_team_name_en', ''),
+                    'start': date_str,
+                    'start_ts': dt.timestamp(),
+                    'iso_date': iso_date,
+                    'group': g.get('group', ''),
+                    'match_type': g.get('type', 'group'),
+                    'odds_1': None, 'odds_x': None, 'odds_2': None,
+                })
+    except Exception as e:
+        print(f'worldcup26.ir error: {e}')
+
+    # Secondary: VM-tipset — enrich with odds where teams match
+    try:
+        r = req.get('https://api.spela.svenskaspel.se/draw/1/europatipset/draws',
+                    headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+        if r.ok:
+            for draw in r.json().get('draws', []):
                 for ev in draw.get('drawEvents', []):
                     match = ev.get('match', {})
                     start_str = match.get('matchStart', '')
                     if not start_str:
                         continue
-                    try:
-                        start_dt = datetime.fromisoformat(start_str.replace('Z', '+00:00'))
-                        if start_dt.tzinfo is None:
-                            start_dt = start_dt.replace(tzinfo=timezone.utc)
-                    except Exception:
-                        continue
-                    if start_dt <= now:
-                        continue
+                    ev_date = start_str[:10]  # "2026-06-17"
                     participants = match.get('participants', [])
-                    hemma = participants[0].get('name', '') if len(participants) > 0 else ''
-                    borta = participants[1].get('name', '') if len(participants) > 1 else ''
-                    if not hemma and not borta:
-                        desc = ev.get('eventDescription', '')
-                        parts = desc.split(' - ', 1)
-                        hemma = parts[0].strip() if parts else ''
-                        borta = parts[1].strip() if len(parts) > 1 else ''
+                    sv_h = name_key(participants[0].get('name', '')) if participants else ''
+                    sv_a = name_key(participants[1].get('name', '')) if len(participants) > 1 else ''
                     odds = ev.get('odds', {})
-                    all_matches.append({
-                        'product': product_name,
-                        'hemma': hemma,
-                        'borta': borta,
-                        'start': start_dt.isoformat(),
-                        'start_ts': start_dt.timestamp(),
-                        'odds_1': parse_odds(odds.get('one')),
-                        'odds_x': parse_odds(odds.get('x')),
-                        'odds_2': parse_odds(odds.get('two')),
-                    })
-        except Exception as e:
-            print(f'Scrape {product} error: {e}')
+                    o1 = parse_odds(odds.get('one'))
+                    ox = parse_odds(odds.get('x'))
+                    o2 = parse_odds(odds.get('two'))
+                    for wm in wc_matches:
+                        if wm['iso_date'] != ev_date:
+                            continue
+                        wm_h = name_key(wm['hemma'])
+                        wm_a = name_key(wm['borta'])
+                        if wm_h[:4] == sv_h[:4] and wm_a[:4] == sv_a[:4]:
+                            wm['odds_1'] = o1
+                            wm['odds_x'] = ox
+                            wm['odds_2'] = o2
+                            break
+    except Exception as e:
+        print(f'VM-tipset odds error: {e}')
 
-    seen = set()
-    unique = []
-    for m in all_matches:
-        key = (m['hemma'], m['borta'], m['start'][:13])
-        if key not in seen:
-            seen.add(key)
-            unique.append(m)
-
-    unique.sort(key=lambda x: x['start_ts'])
-    _matches_cache = unique[:10]
+    wc_matches.sort(key=lambda x: x['start_ts'])
+    _matches_cache = [{k: v for k, v in m.items() if k != 'iso_date'} for m in wc_matches[:15]]
     _last_scraped = datetime.now(timezone.utc)
-    print(f'Scraped {len(_matches_cache)} matches')
+    print(f'Scraped {len(_matches_cache)} VM matches')
     return _matches_cache
 
 def background_scraper():

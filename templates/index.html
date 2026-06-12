@@ -482,14 +482,32 @@ function recalculateKassa() {
 function fmtKr(n)     { if (n == null) return '–'; return (n >= 0 ? '' : '−') + Math.abs(n).toLocaleString('sv-SE') + ' kr'; }
 function fmtKrPlus(n) { if (n == null) return '–'; return (n >= 0 ? '+' : '−') + Math.abs(n).toLocaleString('sv-SE') + ' kr'; }
 function fmtDate(s)   { if (!s) return ''; return new Date(s).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' }); }
-function fmtDateTime(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
+function fmtMatchDate(s) {
+  // "06/12/2026 15:00" → "Fre 12 jun"
+  if (!s) return '';
+  const datePart = s.split(' ')[0];
+  const p = datePart.split('/');
+  if (p.length !== 3) return datePart;
+  const d = new Date(Number(p[2]), Number(p[0]) - 1, Number(p[1]));
   const days = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
   const months = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
   return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
 }
-function fmtTime(iso) { if (!iso) return ''; return new Date(iso).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }); }
+function fmtMatchTime(s) {
+  // "06/12/2026 15:00" → "15:00"
+  if (!s) return '';
+  const parts = s.split(' ');
+  return parts.length > 1 ? parts[1] : '';
+}
+function fmtGroup(m) {
+  if (m.match_type === 'group') return `Grupp ${m.group}`;
+  if (m.match_type === 'r32')   return 'Omg. 32';
+  if (m.match_type === 'r16')   return 'Åttondel';
+  if (m.match_type === 'qf')    return 'Kvartsfinal';
+  if (m.match_type === 'sf')    return 'Semifinal';
+  if (m.match_type === 'final') return 'Final';
+  return '';
+}
 function fmtOdds(n)   { return n != null ? Number(n).toFixed(2) : '–'; }
 function esc(s)       { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
@@ -569,9 +587,11 @@ function renderMatches() {
 
   let rows = '';
   matchesData.forEach(m => {
+    const groupLabel = fmtGroup(m);
     rows += `<tr>
-      <td class="muted">${fmtDateTime(m.start)}</td>
-      <td class="muted">${fmtTime(m.start)}</td>
+      <td class="muted">${fmtMatchDate(m.start)}</td>
+      <td class="muted">${fmtMatchTime(m.start)}</td>
+      <td class="muted" style="font-size:11px">${esc(groupLabel)}</td>
       <td class="bold">${esc(m.hemma)} <span style="color:var(--muted);font-weight:400">–</span> ${esc(m.borta)}</td>
       <td class="ctr"><span class="odds-pill">${fmtOdds(m.odds_1)}</span></td>
       <td class="ctr"><span class="odds-pill">${fmtOdds(m.odds_x)}</span></td>
@@ -582,12 +602,12 @@ function renderMatches() {
   body.innerHTML = `
     <div class="table-wrap"><table>
       <thead><tr>
-        <th>Datum</th><th>Tid</th><th>Match</th>
+        <th>Datum</th><th>Tid (lokal)</th><th>Grupp</th><th>Match</th>
         <th class="ctr">1</th><th class="ctr">X</th><th class="ctr">2</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table></div>
-    <div style="padding:8px 16px;font-size:11px;color:var(--muted)">Odds från Svenska Spel VM-tipset · Uppdateras varje timme</div>`;
+    <div style="padding:8px 16px;font-size:11px;color:var(--muted)">Tider visas i lokal stadiontid · Odds från Svenska Spel VM-tipset</div>`;
 }
 
 function renderPlayers() {
