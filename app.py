@@ -55,8 +55,48 @@ def parse_odds(val):
     except Exception:
         return None
 
+# Swedish VM-tipset name → English worldcup26.ir name
+SV_TO_EN = {
+    'usa': 'united states', 'mexiko': 'mexico', 'kanada': 'canada',
+    'brasilien': 'brazil', 'argentina': 'argentina', 'colombia': 'colombia',
+    'uruguay': 'uruguay', 'ecuador': 'ecuador', 'peru': 'peru',
+    'chile': 'chile', 'venezuela': 'venezuela', 'bolivia': 'bolivia',
+    'paraguay': 'paraguay', 'jamaica': 'jamaica', 'kuba': 'cuba',
+    'haiti': 'haiti', 'el salvador': 'el salvador', 'honduras': 'honduras',
+    'costa rica': 'costa rica', 'guatemala': 'guatemala', 'panama': 'panama',
+    'trinidad och tobago': 'trinidad and tobago',
+    'england': 'england', 'frankrike': 'france', 'tyskland': 'germany',
+    'spanien': 'spain', 'portugal': 'portugal', 'belgien': 'belgium',
+    'nederländerna': 'netherlands', 'italien': 'italy', 'kroatien': 'croatia',
+    'serbien': 'serbia', 'schweiz': 'switzerland', 'österrike': 'austria',
+    'turkiet': 'turkey', 'ukraina': 'ukraine', 'polonien': 'poland',
+    'ungern': 'hungary', 'rumänien': 'romania', 'albanien': 'albania',
+    'slovakien': 'slovakia', 'slovenien': 'slovenia', 'tjeckien': 'czech republic',
+    'skottland': 'scotland', 'wales': 'wales', 'norge': 'norway',
+    'sverige': 'sweden', 'danmark': 'denmark', 'finland': 'finland',
+    'bosnien': 'bosnia and herzegovina',
+    'bosnien & hercegovina': 'bosnia and herzegovina',
+    'bosnien-hercegovina': 'bosnia and herzegovina',
+    'sydkorea': 'south korea', 'japan': 'japan', 'iran': 'iran',
+    'saudiarabien': 'saudi arabia', 'qatar': 'qatar', 'irak': 'iraq',
+    'australien': 'australia', 'nya zeeland': 'new zealand',
+    'indonesia': 'indonesia', 'kina': 'china', 'indien': 'india',
+    'uzbekistan': 'uzbekistan',
+    'marocko': 'morocco', 'tunisien': 'tunisia', 'nigeria': 'nigeria',
+    'kamerun': 'cameroon', 'ghana': 'ghana', 'senegal': 'senegal',
+    'sydafrika': 'south africa', 'egypten': 'egypt', 'mali': 'mali',
+    'elfenbenskusten': 'ivory coast', 'dr kongo': 'dr congo',
+    'tanzania': 'tanzania', 'zambia': 'zambia', 'angola': 'angola',
+    'guinea': 'guinea', 'kap verde': 'cape verde', 'namibia': 'namibia',
+    'kenya': 'kenya', 'kongo': 'dr congo',
+}
+
+def sv_to_en(name):
+    key = name.lower().strip()
+    return SV_TO_EN.get(key, key)
+
 def name_key(s):
-    return s.lower().replace('-', ' ').replace('  ', ' ').strip()[:5]
+    return s.lower().strip()
 
 def scrape_matches():
     global _matches_cache, _last_scraped
@@ -107,8 +147,8 @@ def scrape_matches():
                         continue
                     ev_date = start_str[:10]  # "2026-06-17"
                     participants = match.get('participants', [])
-                    sv_h = name_key(participants[0].get('name', '')) if participants else ''
-                    sv_a = name_key(participants[1].get('name', '')) if len(participants) > 1 else ''
+                    sv_h = sv_to_en(participants[0].get('name', '')) if participants else ''
+                    sv_a = sv_to_en(participants[1].get('name', '')) if len(participants) > 1 else ''
                     odds = ev.get('odds', {})
                     o1 = parse_odds(odds.get('one'))
                     ox = parse_odds(odds.get('x'))
@@ -118,7 +158,7 @@ def scrape_matches():
                             continue
                         wm_h = name_key(wm['hemma'])
                         wm_a = name_key(wm['borta'])
-                        if wm_h[:4] == sv_h[:4] and wm_a[:4] == sv_a[:4]:
+                        if wm_h == sv_h and wm_a == sv_a:
                             wm['odds_1'] = o1
                             wm['odds_x'] = ox
                             wm['odds_2'] = o2
