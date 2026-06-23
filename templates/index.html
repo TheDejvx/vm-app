@@ -313,7 +313,7 @@ tbody tr.row-pending:hover { background: #fff8dc; }
       </div>
 
       <!-- PÅGÅENDE SPEL -->
-      <div class="card" id="pending-card" style="display:none">
+      <div class="card" id="pending-card">
         <div class="card-header">
           <h2>⏳ Pågående spel</h2>
           <span class="matches-meta" id="pending-count"></span>
@@ -736,22 +736,20 @@ function noBetsHtml(authed) {
 
 function renderPending() {
   const bets = state.bets || [];
-  const card = document.getElementById('pending-card');
   const body = document.getElementById('pending-body');
-  const total = bets.length;
 
   const pending = bets
     .map((b, idx) => ({ b, num: idx + 1 }))
     .filter(x => x.b.resultat === 'pagaende')
     .reverse(); // nyast först
 
+  document.getElementById('pending-count').textContent = pending.length ? `${pending.length} st` : '';
+
   if (pending.length === 0) {
-    card.style.display = 'none';
+    body.innerHTML = `<div class="no-data"><div class="icon">⏳</div><div>Inga pågående spel just nu.</div></div>`;
     return;
   }
 
-  card.style.display = '';
-  document.getElementById('pending-count').textContent = `${pending.length} st`;
   body.innerHTML = pending.map(x => betCardHtml(x.b, x.num)).join('');
 }
 
