@@ -62,6 +62,18 @@ body {
 /* ── PAGE ── */
 .page-content { padding: 14px 16px 32px; max-width: 900px; margin: 0 auto; }
 
+/* ── TABS ── */
+.tab-bar { display: flex; gap: 6px; margin-bottom: 14px; }
+.tab-btn {
+  flex: 1; background: rgba(255,255,255,.08); border: none; color: rgba(255,255,255,.7);
+  padding: 10px 8px; border-radius: 9px; font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: all .15s; white-space: nowrap;
+}
+.tab-btn:hover { background: rgba(255,255,255,.14); }
+.tab-btn.active { background: var(--white); color: var(--primary-dark); }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
 /* ── CARDS ── */
 .card {
   background: var(--white); border-radius: 12px;
@@ -240,6 +252,20 @@ tbody tr.row-pending:hover { background: #fff8dc; }
 .player-card .inkop { font-size: 11px; color: var(--muted); margin-top: 1px; }
 .matches-meta { font-size: 11px; color: var(--muted); }
 
+/* ── STATS ── */
+.stats-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+}
+@media (min-width: 480px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+.stat-card { background: var(--light-bg); border-radius: 10px; padding: 13px 10px; text-align: center; }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 5px; }
+.stat-value { font-size: 17px; font-weight: 700; color: var(--primary-dark); }
+.stat-value.positive { color: var(--win); }
+.stat-value.negative { color: var(--loss); }
+.stats-details { margin-top: 14px; }
+.stat-detail { font-size: 13px; padding: 9px 0; border-top: 1px solid var(--border); }
+.stat-detail-label { font-weight: 600; }
+
 @media (max-width: 480px) {
   .summary-item .value { font-size: 15px; }
   .summary-item .label { font-size: 9px; }
@@ -260,77 +286,114 @@ tbody tr.row-pending:hover { background: #fff8dc; }
 
   <div class="page-content">
 
-    <!-- SUMMARY -->
-    <div class="summary-bar">
-      <div class="summary-item">
-        <div class="label">Aktuell kassa</div>
-        <div class="value" id="sum-kassa">–</div>
-      </div>
-      <div class="summary-item">
-        <div class="label">Per gubbe</div>
-        <div class="value" id="sum-per-gubbe">–</div>
-      </div>
-      <div class="summary-item">
-        <div class="label">Vinst / förlust</div>
-        <div class="value" id="sum-pnl">–</div>
-      </div>
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-btn-oversikt" onclick="switchTab('oversikt')">📊 Översikt</button>
+      <button class="tab-btn" id="tab-btn-historik" onclick="switchTab('historik')">📜 Historik</button>
+      <button class="tab-btn" id="tab-btn-statistik" onclick="switchTab('statistik')">📈 Statistik</button>
     </div>
 
-    <!-- SPELLOG -->
-    <div class="card">
-      <div class="card-header">
-        <h2>💰 Spellog</h2>
-        <button class="btn btn-primary btn-sm" id="add-bet-btn" onclick="openModal()" style="display:none">+ Lägg till</button>
-      </div>
-      <div id="bet-log-body">
-        <div class="loading-row">Laddar...</div>
-      </div>
-    </div>
+    <!-- ÖVERSIKT -->
+    <div class="tab-content active" id="tab-oversikt">
 
-    <!-- SPELTORSKAR -->
-    <div class="card">
-      <div class="card-header">
-        <h2>👥 Speltorskar</h2>
-        <span class="matches-meta" id="speltorskar-meta"></span>
-      </div>
-      <div class="card-body">
-        <div class="player-grid" id="player-grid"></div>
-      </div>
-    </div>
-
-    <!-- KOMMANDE VM-MATCHER -->
-    <div class="card">
-      <div class="card-header">
-        <h2>⚽ Kommande VM-matcher</h2>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="matches-meta" id="matches-updated"></span>
-          <button class="btn btn-outline btn-sm" onclick="refreshMatches()">↺</button>
+      <!-- SUMMARY -->
+      <div class="summary-bar">
+        <div class="summary-item">
+          <div class="label">Aktuell kassa</div>
+          <div class="value" id="sum-kassa">–</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">Per gubbe</div>
+          <div class="value" id="sum-per-gubbe">–</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">Vinst / förlust</div>
+          <div class="value" id="sum-pnl">–</div>
         </div>
       </div>
-      <div id="matches-body">
-        <div class="loading-row">Hämtar matcher från Svenska Spel...</div>
+
+      <!-- SPELLOG -->
+      <div class="card">
+        <div class="card-header">
+          <h2>💰 Spellog</h2>
+          <button class="btn btn-primary btn-sm" id="add-bet-btn" onclick="openModal()" style="display:none">+ Lägg till</button>
+        </div>
+        <div id="bet-log-body">
+          <div class="loading-row">Laddar...</div>
+        </div>
+      </div>
+
+      <!-- SPELTORSKAR -->
+      <div class="card">
+        <div class="card-header">
+          <h2>👥 Speltorskar</h2>
+          <span class="matches-meta" id="speltorskar-meta"></span>
+        </div>
+        <div class="card-body">
+          <div class="player-grid" id="player-grid"></div>
+        </div>
+      </div>
+
+      <!-- KOMMANDE VM-MATCHER -->
+      <div class="card">
+        <div class="card-header">
+          <h2>⚽ Kommande VM-matcher</h2>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="matches-meta" id="matches-updated"></span>
+            <button class="btn btn-outline btn-sm" onclick="refreshMatches()">↺</button>
+          </div>
+        </div>
+        <div id="matches-body">
+          <div class="loading-row">Hämtar matcher från Svenska Spel...</div>
+        </div>
+      </div>
+
+      <!-- INSTALL AS APP -->
+      <div class="install-card">
+        <h3>📲 Lägg till som app på hemskärmen</h3>
+        <div class="install-steps">
+          <div class="install-platform">
+            <div class="plat-name">Android (Chrome)</div>
+            <ol>
+              <li>Tryck på <i class="icon">⋮</i> menyn uppe till höger</li>
+              <li>Välj <strong>Lägg till på startskärmen</strong></li>
+              <li>Tryck <strong>Lägg till</strong></li>
+            </ol>
+          </div>
+          <div class="install-platform">
+            <div class="plat-name">iPhone (Safari)</div>
+            <ol>
+              <li>Tryck på dela-ikonen <i class="icon">⬆</i> längst ner</li>
+              <li>Välj <strong>Lägg till på hemskärmen</strong></li>
+              <li>Tryck <strong>Lägg till</strong></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- HISTORIK -->
+    <div class="tab-content" id="tab-historik">
+      <div class="card">
+        <div class="card-header">
+          <h2>📜 Alla spel</h2>
+          <span class="matches-meta" id="history-count"></span>
+        </div>
+        <div id="history-body">
+          <div class="loading-row">Laddar...</div>
+        </div>
       </div>
     </div>
 
-    <!-- INSTALL AS APP -->
-    <div class="install-card">
-      <h3>📲 Lägg till som app på hemskärmen</h3>
-      <div class="install-steps">
-        <div class="install-platform">
-          <div class="plat-name">Android (Chrome)</div>
-          <ol>
-            <li>Tryck på <i class="icon">⋮</i> menyn uppe till höger</li>
-            <li>Välj <strong>Lägg till på startskärmen</strong></li>
-            <li>Tryck <strong>Lägg till</strong></li>
-          </ol>
+    <!-- STATISTIK -->
+    <div class="tab-content" id="tab-statistik">
+      <div class="card">
+        <div class="card-header">
+          <h2>📈 Statistik</h2>
         </div>
-        <div class="install-platform">
-          <div class="plat-name">iPhone (Safari)</div>
-          <ol>
-            <li>Tryck på dela-ikonen <i class="icon">⬆</i> längst ner</li>
-            <li>Välj <strong>Lägg till på hemskärmen</strong></li>
-            <li>Tryck <strong>Lägg till</strong></li>
-          </ol>
+        <div class="card-body" id="stats-body">
+          <div class="loading-row">Laddar...</div>
         </div>
       </div>
     </div>
@@ -583,10 +646,20 @@ function fmtGroup(m) {
 function fmtOdds(n)   { return n != null ? Number(n).toFixed(2) : '–'; }
 function esc(s)       { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+// ── TABS ──
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tab-btn-' + name).classList.add('active');
+}
+
 // ── RENDER ──
 function render() {
   renderSummary();
   renderBetLog();
+  renderHistory();
+  renderStats();
   renderPlayers();
   updateAuthUI();
 }
@@ -602,63 +675,148 @@ function renderSummary() {
   pnlEl.className = 'value ' + (pnl > 0 ? 'positive' : pnl < 0 ? 'negative' : '');
 }
 
+function betCardHtml(b, displayNum) {
+  const isPending  = b.resultat === 'pagaende';
+  const isWin      = b.resultat === 'vinst';
+  const badgeClass = isPending ? 'badge-pending' : isWin ? 'badge-win' : 'badge-loss';
+  const badgeLabel = isPending ? 'Pågående'      : isWin ? 'Vinst'     : 'Förlust';
+  const pnlClass   = isPending ? 'pnl-pending'   : isWin ? 'pnl-pos'   : 'pnl-neg';
+  const pnlText    = isPending
+    ? `−${b.belopp.toLocaleString('sv-SE')} kr`
+    : fmtKrPlus(b.vinst_kr);
+  let forecastHtml = '';
+  if (isPending && b.odds) {
+    const winKassa  = b.kassa_fore + Math.round(b.belopp * b.odds) - b.belopp;
+    const lossKassa = b.kassa_fore - b.belopp;
+    forecastHtml = `<div class="bet-forecast">
+      <span class="forecast-win">Vinst: ${winKassa.toLocaleString('sv-SE')} kr</span>
+      <span class="forecast-sep">·</span>
+      <span class="forecast-loss">Förlust: ${lossKassa.toLocaleString('sv-SE')} kr</span>
+    </div>`;
+  }
+  return `<div class="bet-card${isPending ? ' pending' : ''}">
+    <div class="bet-card-top">
+      <span class="bet-card-num">#${displayNum} · ${fmtDate(b.datum)}</span>
+      <span class="badge ${badgeClass}">${badgeLabel}</span>
+    </div>
+    <div class="bet-card-desc">${esc(b.beskrivning || '–')}</div>
+    <div class="bet-card-meta">
+      <div class="bet-card-left">${b.belopp.toLocaleString('sv-SE')} kr &nbsp;·&nbsp; @${Number(b.odds).toFixed(2)}</div>
+      <div class="bet-card-right">
+        <div class="bet-card-pnl ${pnlClass}">${pnlText}</div>
+        <div class="bet-card-kassa">Kassa: ${b.kassa_efter.toLocaleString('sv-SE')} kr</div>
+      </div>
+    </div>
+    ${forecastHtml}
+    <div class="bet-card-actions">
+      <button class="btn-ghost" onclick="editBet(${b.id})">✏️ Redigera</button>
+      <button class="btn-ghost" onclick="deleteBet(${b.id})">🗑 Ta bort</button>
+    </div>
+  </div>`;
+}
+
+function noBetsHtml(authed) {
+  return `
+    <div class="no-data">
+      <div class="icon">🎲</div>
+      <div>Inga spel registrerade ännu.</div>
+      ${authed ? '<div style="margin-top:12px"><button class="btn btn-primary" onclick="openModal()">+ Lägg till första spel</button></div>' : ''}
+    </div>`;
+}
+
 function renderBetLog() {
-  const bets   = state.bets || [];
-  const authed = checkAuth();
-  const body   = document.getElementById('bet-log-body');
+  const bets = state.bets || [];
+  const body = document.getElementById('bet-log-body');
 
   if (bets.length === 0) {
-    body.innerHTML = `
-      <div class="no-data">
-        <div class="icon">🎲</div>
-        <div>Inga spel registrerade ännu.</div>
-        ${authed ? '<div style="margin-top:12px"><button class="btn btn-primary" onclick="openModal()">+ Lägg till första spel</button></div>' : ''}
-      </div>`;
+    body.innerHTML = noBetsHtml(checkAuth());
     return;
   }
 
-  let cards = '';
-  bets.forEach((b, i) => {
-    const isPending  = b.resultat === 'pagaende';
-    const isWin      = b.resultat === 'vinst';
-    const badgeClass = isPending ? 'badge-pending' : isWin ? 'badge-win' : 'badge-loss';
-    const badgeLabel = isPending ? 'Pågående'      : isWin ? 'Vinst'     : 'Förlust';
-    const pnlClass   = isPending ? 'pnl-pending'   : isWin ? 'pnl-pos'   : 'pnl-neg';
-    const pnlText    = isPending
-      ? `−${b.belopp.toLocaleString('sv-SE')} kr`
-      : fmtKrPlus(b.vinst_kr);
-    let forecastHtml = '';
-    if (isPending && b.odds) {
-      const winKassa  = b.kassa_fore + Math.round(b.belopp * b.odds) - b.belopp;
-      const lossKassa = b.kassa_fore - b.belopp;
-      forecastHtml = `<div class="bet-forecast">
-        <span class="forecast-win">Vinst: ${winKassa.toLocaleString('sv-SE')} kr</span>
-        <span class="forecast-sep">·</span>
-        <span class="forecast-loss">Förlust: ${lossKassa.toLocaleString('sv-SE')} kr</span>
-      </div>`;
-    }
-    cards += `<div class="bet-card${isPending ? ' pending' : ''}">
-      <div class="bet-card-top">
-        <span class="bet-card-num">#${i + 1} · ${fmtDate(b.datum)}</span>
-        <span class="badge ${badgeClass}">${badgeLabel}</span>
-      </div>
-      <div class="bet-card-desc">${esc(b.beskrivning || '–')}</div>
-      <div class="bet-card-meta">
-        <div class="bet-card-left">${b.belopp.toLocaleString('sv-SE')} kr &nbsp;·&nbsp; @${Number(b.odds).toFixed(2)}</div>
-        <div class="bet-card-right">
-          <div class="bet-card-pnl ${pnlClass}">${pnlText}</div>
-          <div class="bet-card-kassa">Kassa: ${b.kassa_efter.toLocaleString('sv-SE')} kr</div>
-        </div>
-      </div>
-      ${forecastHtml}
-      <div class="bet-card-actions">
-        <button class="btn-ghost" onclick="editBet(${b.id})">✏️ Redigera</button>
-        <button class="btn-ghost" onclick="deleteBet(${b.id})">🗑 Ta bort</button>
-      </div>
+  const total  = bets.length;
+  const latest = bets.slice(-10).reverse(); // 10 senaste, nyast först
+  let cards = latest.map((b, idx) => betCardHtml(b, total - idx)).join('');
+
+  if (total > 10) {
+    cards += `<div style="padding:14px 16px;text-align:center">
+      <button class="btn btn-outline btn-sm" onclick="switchTab('historik')">Visa alla ${total} spel →</button>
     </div>`;
-  });
+  }
 
   body.innerHTML = cards;
+}
+
+function renderHistory() {
+  const bets = state.bets || [];
+  const body = document.getElementById('history-body');
+  if (!body) return;
+
+  document.getElementById('history-count').textContent = bets.length ? `${bets.length} spel totalt` : '';
+
+  if (bets.length === 0) {
+    body.innerHTML = noBetsHtml(checkAuth());
+    return;
+  }
+
+  const total = bets.length;
+  const reversed = [...bets].reverse(); // nyast först
+  body.innerHTML = reversed.map((b, idx) => betCardHtml(b, total - idx)).join('');
+}
+
+function renderStats() {
+  const bets = state.bets || [];
+  const body = document.getElementById('stats-body');
+  if (!body) return;
+
+  if (bets.length === 0) {
+    body.innerHTML = `<div class="no-data"><div class="icon">📈</div><div>Ingen statistik tillgänglig än.</div></div>`;
+    return;
+  }
+
+  const resolved = bets.filter(b => b.resultat !== 'pagaende');
+  const wins     = bets.filter(b => b.resultat === 'vinst');
+  const losses   = bets.filter(b => b.resultat === 'forlust');
+  const withOdds = bets.filter(b => Number(b.odds) > 0);
+
+  const totalBets   = bets.length;
+  const totalInsats = bets.reduce((s, b) => s + b.belopp, 0);
+  const avgInsats   = Math.round(totalInsats / totalBets);
+  const avgOdds     = withOdds.length ? withOdds.reduce((s, b) => s + Number(b.odds), 0) / withOdds.length : 0;
+  const winRate     = resolved.length ? Math.round((wins.length / resolved.length) * 100) : 0;
+  const totalVinst  = resolved.reduce((s, b) => s + b.vinst_kr, 0);
+
+  const biggestWin     = wins.length   ? wins.reduce((a, b) => (b.vinst_kr > a.vinst_kr ? b : a))     : null;
+  const biggestLoss    = losses.length ? losses.reduce((a, b) => (b.belopp > a.belopp ? b : a))       : null;
+  const highestOddsWin = wins.length   ? wins.reduce((a, b) => (Number(b.odds) > Number(a.odds) ? b : a)) : null;
+
+  const stats = [
+    { label: 'Antal spel',            value: totalBets },
+    { label: 'Vinstprocent',          value: winRate + '%' },
+    { label: 'Total insats',          value: totalInsats.toLocaleString('sv-SE') + ' kr' },
+    { label: 'Totalt resultat',       value: fmtKrPlus(totalVinst), cls: totalVinst >= 0 ? 'positive' : 'negative' },
+    { label: 'Genomsnittlig insats',  value: avgInsats.toLocaleString('sv-SE') + ' kr' },
+    { label: 'Genomsnittliga odds',   value: avgOdds.toFixed(2) },
+    { label: 'Högsta vinst',          value: biggestWin ? fmtKrPlus(biggestWin.vinst_kr) : '–', cls: 'positive' },
+    { label: 'Högsta odds (vunnet)',  value: highestOddsWin ? '@' + Number(highestOddsWin.odds).toFixed(2) : '–' },
+    { label: 'Största förlust',       value: biggestLoss ? '−' + biggestLoss.belopp.toLocaleString('sv-SE') + ' kr' : '–', cls: 'negative' },
+  ];
+
+  let html = `<div class="stats-grid">` + stats.map(s => `
+    <div class="stat-card">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-value ${s.cls || ''}">${s.value}</div>
+    </div>`).join('') + `</div>`;
+
+  let details = '';
+  if (biggestWin) {
+    details += `<div class="stat-detail"><span class="stat-detail-label">🏆 Bästa spelet:</span> ${esc(biggestWin.beskrivning || '–')} (${fmtDate(biggestWin.datum)}) — ${fmtKrPlus(biggestWin.vinst_kr)}</div>`;
+  }
+  if (biggestLoss) {
+    details += `<div class="stat-detail"><span class="stat-detail-label">💀 Sämsta spelet:</span> ${esc(biggestLoss.beskrivning || '–')} (${fmtDate(biggestLoss.datum)}) — −${biggestLoss.belopp.toLocaleString('sv-SE')} kr</div>`;
+  }
+  if (details) html += `<div class="stats-details">${details}</div>`;
+
+  body.innerHTML = html;
 }
 
 function renderMatches() {
