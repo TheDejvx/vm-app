@@ -813,6 +813,7 @@ function renderStats() {
   const avgOdds     = withOdds.length ? withOdds.reduce((s, b) => s + Number(b.odds), 0) / withOdds.length : 0;
   const winRate     = resolved.length ? Math.round((wins.length / resolved.length) * 100) : 0;
   const totalVinst  = resolved.reduce((s, b) => s + b.vinst_kr, 0);
+  const totalInspelat = wins.reduce((s, b) => s + Math.round(b.belopp * b.odds), 0);
 
   const biggestWin     = wins.length   ? wins.reduce((a, b) => (b.vinst_kr > a.vinst_kr ? b : a))     : null;
   const biggestLoss    = losses.length ? losses.reduce((a, b) => (b.belopp > a.belopp ? b : a))       : null;
@@ -823,6 +824,7 @@ function renderStats() {
     { label: 'Vinstprocent',          value: winRate + '%' },
     { label: 'Total insats',          value: totalInsats.toLocaleString('sv-SE') + ' kr' },
     { label: 'Totalt resultat',       value: fmtKrPlus(totalVinst), cls: totalVinst >= 0 ? 'positive' : 'negative' },
+    { label: 'Totalt inspelat',       value: totalInspelat.toLocaleString('sv-SE') + ' kr', cls: 'positive' },
     { label: 'Genomsnittlig insats',  value: avgInsats.toLocaleString('sv-SE') + ' kr' },
     { label: 'Genomsnittliga odds',   value: avgOdds.toFixed(2) },
     { label: 'Högsta vinst',          value: biggestWin ? fmtKrPlus(biggestWin.vinst_kr) : '–', cls: 'positive' },
