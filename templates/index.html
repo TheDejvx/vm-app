@@ -131,11 +131,13 @@ td.bold { font-weight: 600; }
 .badge-win     { background: var(--win-bg);  color: var(--win);  }
 .badge-loss    { background: var(--loss-bg); color: var(--loss); }
 .badge-pending { background: #fff3cd; color: #7a5000; }
+.badge-uttag   { background: #e2e3e5; color: #41464b; }
 .pnl-pending   { color: var(--muted); font-style: italic; }
 tbody tr.row-pending { background: #fffdf0; }
 tbody tr.row-pending:hover { background: #fff8dc; }
 .pnl-pos { color: var(--win);  font-weight: 600; }
 .pnl-neg { color: var(--loss); font-weight: 600; }
+.pnl-neutral { color: var(--muted); font-weight: 600; }
 
 /* ── BET CARDS ── */
 .bet-card {
@@ -158,6 +160,13 @@ tbody tr.row-pending:hover { background: #fff8dc; }
 .bet-card-pnl { font-size: 15px; font-weight: 700; }
 .bet-card-kassa { font-size: 11px; color: var(--muted); margin-top: 1px; }
 .bet-card-actions { margin-top: 8px; display: flex; gap: 4px; justify-content: flex-end; }
+.pending-total-row {
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 12px 16px; border-top: 2px solid var(--border); background: var(--light-bg);
+}
+.pending-total-item { text-align: center; }
+.ptot-label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
+.ptot-value { font-size: 15px; font-weight: 700; }
 .bet-forecast { margin-top: 7px; font-size: 12px; display: flex; gap: 6px; align-items: center; }
 .forecast-win  { color: var(--win);  font-weight: 600; }
 .forecast-loss { color: var(--loss); font-weight: 600; }
@@ -405,6 +414,14 @@ tbody tr.row-pending:hover { background: #fff8dc; }
           <div class="loading-row">Laddar...</div>
         </div>
       </div>
+
+      <div class="card" id="winning-bets-card" style="display:none">
+        <div class="card-header">
+          <h2>🏆 Vinnande spel</h2>
+          <span class="matches-meta" id="winning-bets-count"></span>
+        </div>
+        <div id="winning-bets-body"></div>
+      </div>
     </div>
 
   </div>
@@ -451,17 +468,18 @@ tbody tr.row-pending:hover { background: #fff8dc; }
         <label>Belopp på spel (kr)</label>
         <input type="number" id="f-belopp" min="1" step="1" placeholder="200" oninput="updatePreview()">
       </div>
-      <div class="form-row">
+      <div class="form-row" id="row-odds">
         <label>Odds</label>
         <input type="number" id="f-odds" min="1.01" step="0.01" placeholder="3.50" oninput="updatePreview()">
       </div>
       <div class="form-row">
         <label>Resultat</label>
-        <select id="f-resultat" onchange="updatePreview()">
+        <select id="f-resultat" onchange="onResultatChange()">
           <option value="">Välj resultat...</option>
           <option value="pagaende">Pågående</option>
           <option value="vinst">Vinst</option>
           <option value="forlust">Förlust</option>
+          <option value="uttag">Uttag</option>
         </select>
       </div>
       <div class="form-preview" id="form-preview" style="display:none">
@@ -688,12 +706,16 @@ function renderSummary() {
 function betCardHtml(b, displayNum) {
   const isPending  = b.resultat === 'pagaende';
   const isWin      = b.resultat === 'vinst';
-  const badgeClass = isPending ? 'badge-pending' : isWin ? 'badge-win' : 'badge-loss';
-  const badgeLabel = isPending ? 'Pågående'      : isWin ? 'Vinst'     : 'Förlust';
-  const pnlClass   = isPending ? 'pnl-pending'   : isWin ? 'pnl-pos'   : 'pnl-neg';
-  const pnlText    = isPending
+  const isUttag    = b.resultat === 'uttag';
+  const badgeClass = isPending ? 'badge-pending' : isWin ? 'badge-win' : isUttag ? 'badge-uttag' : 'badge-loss';
+  const badgeLabel = isPending ? 'Pågående'      : isWin ? 'Vinst'     : isUttag ? 'Uttag'        : 'Förlust';
+  const pnlClass   = isPending ? 'pnl-pending'   : isWin ? 'pnl-pos'   : isUttag ? 'pnl-neutral'  : 'pnl-neg';
+  const pnlText    = (isPending || isUttag)
     ? `−${b.belopp.toLocaleString('sv-SE')} kr`
     : fmtKrPlus(b.vinst_kr);
+  const leftMeta = isUttag
+    ? `${b.belopp.toLocaleString('sv-SE')} kr`
+    : `${b.belopp.toLocaleString('sv-SE')} kr &nbsp;·&nbsp; @${Number(b.odds).toFixed(2)}`;
   let forecastHtml = '';
   if (isPending && b.odds) {
     const winKassa  = b.kassa_fore + Math.round(b.belopp * b.odds) - b.belopp;
@@ -711,7 +733,7 @@ function betCardHtml(b, displayNum) {
     </div>
     <div class="bet-card-desc">${esc(b.beskrivning || '–')}</div>
     <div class="bet-card-meta">
-      <div class="bet-card-left">${b.belopp.toLocaleString('sv-SE')} kr &nbsp;·&nbsp; @${Number(b.odds).toFixed(2)}</div>
+      <div class="bet-card-left">${leftMeta}</div>
       <div class="bet-card-right">
         <div class="bet-card-pnl ${pnlClass}">${pnlText}</div>
         <div class="bet-card-kassa">Kassa: ${b.kassa_efter.toLocaleString('sv-SE')} kr</div>
@@ -750,7 +772,26 @@ function renderPending() {
     return;
   }
 
-  body.innerHTML = pending.map(x => betCardHtml(x.b, x.num)).join('');
+  let html = pending.map(x => betCardHtml(x.b, x.num)).join('');
+
+  // kassa already assumes every pending bet is lost (stake out) — add back
+  // the payout of each pending bet to get the "everyone wins" scenario.
+  const kassaAllLose = currentKassa();
+  const winDelta = pending.reduce((s, x) => s + (x.b.odds ? Math.round(x.b.belopp * x.b.odds) : 0), 0);
+  const kassaAllWin = kassaAllLose + winDelta;
+
+  html += `<div class="pending-total-row">
+    <div class="pending-total-item">
+      <span class="ptot-label">Om alla vinner</span>
+      <span class="ptot-value pnl-pos">${kassaAllWin.toLocaleString('sv-SE')} kr</span>
+    </div>
+    <div class="pending-total-item">
+      <span class="ptot-label">Om alla förlorar</span>
+      <span class="ptot-value pnl-neg">${kassaAllLose.toLocaleString('sv-SE')} kr</span>
+    </div>
+  </div>`;
+
+  body.innerHTML = html;
 }
 
 function renderBetLog() {
@@ -793,12 +834,14 @@ function renderHistory() {
 }
 
 function renderStats() {
-  const bets = state.bets || [];
+  // Uttag are withdrawals, not games — they affect kassa but stay out of stats.
+  const bets = (state.bets || []).filter(b => b.resultat !== 'uttag');
   const body = document.getElementById('stats-body');
   if (!body) return;
 
   if (bets.length === 0) {
     body.innerHTML = `<div class="no-data"><div class="icon">📈</div><div>Ingen statistik tillgänglig än.</div></div>`;
+    renderWinningBets();
     return;
   }
 
@@ -806,11 +849,13 @@ function renderStats() {
   const wins     = bets.filter(b => b.resultat === 'vinst');
   const losses   = bets.filter(b => b.resultat === 'forlust');
   const withOdds = bets.filter(b => Number(b.odds) > 0);
+  const winsWithOdds = wins.filter(b => Number(b.odds) > 0);
 
   const totalBets   = bets.length;
   const totalInsats = bets.reduce((s, b) => s + b.belopp, 0);
   const avgInsats   = Math.round(totalInsats / totalBets);
   const avgOdds     = withOdds.length ? withOdds.reduce((s, b) => s + Number(b.odds), 0) / withOdds.length : 0;
+  const avgOddsWins = winsWithOdds.length ? winsWithOdds.reduce((s, b) => s + Number(b.odds), 0) / winsWithOdds.length : 0;
   const winRate     = resolved.length ? Math.round((wins.length / resolved.length) * 100) : 0;
   const totalVinst  = resolved.reduce((s, b) => s + b.vinst_kr, 0);
   const totalInspelat = wins.reduce((s, b) => s + Math.round(b.belopp * b.odds), 0);
@@ -827,6 +872,7 @@ function renderStats() {
     { label: 'Totalt inspelat',       value: totalInspelat.toLocaleString('sv-SE') + ' kr', cls: 'positive' },
     { label: 'Genomsnittlig insats',  value: avgInsats.toLocaleString('sv-SE') + ' kr' },
     { label: 'Genomsnittliga odds',   value: avgOdds.toFixed(2) },
+    { label: 'Snittodds (vinster)',   value: avgOddsWins ? avgOddsWins.toFixed(2) : '–' },
     { label: 'Högsta vinst',          value: biggestWin ? fmtKrPlus(biggestWin.vinst_kr) : '–', cls: 'positive' },
     { label: 'Högsta odds (vunnet)',  value: highestOddsWin ? '@' + Number(highestOddsWin.odds).toFixed(2) : '–' },
     { label: 'Största förlust',       value: biggestLoss ? '−' + biggestLoss.belopp.toLocaleString('sv-SE') + ' kr' : '–', cls: 'negative' },
@@ -848,6 +894,27 @@ function renderStats() {
   if (details) html += `<div class="stats-details">${details}</div>`;
 
   body.innerHTML = html;
+  renderWinningBets();
+}
+
+function renderWinningBets() {
+  const bets = state.bets || [];
+  const card = document.getElementById('winning-bets-card');
+  const body = document.getElementById('winning-bets-body');
+
+  const wins = bets
+    .map((b, idx) => ({ b, num: idx + 1 }))
+    .filter(x => x.b.resultat === 'vinst')
+    .reverse(); // nyast först
+
+  if (wins.length === 0) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = '';
+  document.getElementById('winning-bets-count').textContent = `${wins.length} st`;
+  body.innerHTML = wins.map(x => betCardHtml(x.b, x.num)).join('');
 }
 
 function renderMatches() {
@@ -929,6 +996,7 @@ function _openModalInternal() {
   document.getElementById('f-belopp').value = '';
   document.getElementById('f-odds').value = '';
   document.getElementById('f-resultat').value = 'pagaende';
+  document.getElementById('row-odds').style.display = '';
   document.getElementById('form-preview').style.display = 'none';
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-beskrivning').focus(), 100);
@@ -945,7 +1013,7 @@ function _editBetInternal(id) {
   document.getElementById('f-belopp').value       = bet.belopp;
   document.getElementById('f-odds').value         = bet.odds;
   document.getElementById('f-resultat').value     = bet.resultat;
-  updatePreview();
+  onResultatChange();
   document.getElementById('modal-overlay').classList.add('open');
   setTimeout(() => document.getElementById('f-resultat').focus(), 100);
 }
@@ -953,6 +1021,12 @@ function _editBetInternal(id) {
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   editingBetId = null;
+}
+
+function onResultatChange() {
+  const resultat = document.getElementById('f-resultat').value;
+  document.getElementById('row-odds').style.display = resultat === 'uttag' ? 'none' : '';
+  updatePreview();
 }
 
 function updatePreview() {
@@ -973,25 +1047,25 @@ function updatePreview() {
   }
 
   let vinst_kr;
-  if (result === 'vinst')     vinst_kr = Math.round(belopp * odds) - belopp;
-  else if (result === 'forlust') vinst_kr = -belopp;
-  else                        vinst_kr = -belopp; // pågående
+  if (result === 'vinst') vinst_kr = Math.round(belopp * odds) - belopp;
+  else                    vinst_kr = -belopp; // förlust, pågående, uttag
 
-  const label = result === 'vinst' ? 'Vinst' : result === 'forlust' ? 'Förlust' : 'Insats ute';
+  const label = result === 'vinst' ? 'Vinst' : result === 'forlust' ? 'Förlust' : result === 'uttag' ? 'Uttag' : 'Insats ute';
+  const isOutflow = result === 'pagaende' || result === 'uttag';
   document.getElementById('prev-kassa-fore').textContent  = fmtKr(kassa_fore);
   document.getElementById('prev-pnl-label').textContent   = label;
-  document.getElementById('prev-pnl-kr').textContent      = result === 'pagaende' ? `−${belopp.toLocaleString('sv-SE')} kr` : fmtKrPlus(vinst_kr);
-  document.getElementById('prev-pnl-kr').className        = vinst_kr > 0 ? 'pnl-pos' : (result === 'pagaende' ? 'pnl-pending' : 'pnl-neg');
+  document.getElementById('prev-pnl-kr').textContent      = isOutflow ? `−${belopp.toLocaleString('sv-SE')} kr` : fmtKrPlus(vinst_kr);
+  document.getElementById('prev-pnl-kr').className        = vinst_kr > 0 ? 'pnl-pos' : (result === 'pagaende' ? 'pnl-pending' : result === 'uttag' ? 'pnl-neutral' : 'pnl-neg');
   document.getElementById('prev-kassa-efter').textContent = fmtKr(kassa_fore + vinst_kr);
   preview.style.display = 'block';
 }
 
 async function submitBet() {
   const datum       = document.getElementById('f-datum').value;
-  const beskrivning = document.getElementById('f-beskrivning').value.trim();
   const belopp      = parseFloat(document.getElementById('f-belopp').value);
   const odds        = parseFloat(document.getElementById('f-odds').value);
   const resultat    = document.getElementById('f-resultat').value;
+  const beskrivning = document.getElementById('f-beskrivning').value.trim() || (resultat === 'uttag' ? 'Uttag' : '');
 
   if (!datum || !belopp || belopp <= 0 || !resultat) {
     alert('Fyll i datum, belopp och resultat.');
