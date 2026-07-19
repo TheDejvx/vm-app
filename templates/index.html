@@ -149,6 +149,8 @@ tbody tr.row-pending:hover { background: #fff8dc; }
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 4px;
 }
+.win-gif-row { margin-top: 8px; }
+.win-gif { display: block; height: 110px; width: auto; max-width: 100%; border-radius: 10px; }
 .bet-card-num { font-size: 11px; color: var(--muted); }
 .bet-card-desc { font-weight: 600; font-size: 14px; margin-bottom: 6px; line-height: 1.35; }
 .bet-card-meta {
@@ -726,6 +728,7 @@ function betCardHtml(b, displayNum) {
       <span class="forecast-loss">Förlust: ${lossKassa.toLocaleString('sv-SE')} kr</span>
     </div>`;
   }
+  const winGifHtml = isWin ? `<div class="win-gif-row"><img src="/static/sleep-money.gif" alt="" class="win-gif"></div>` : '';
   return `<div class="bet-card${isPending ? ' pending' : ''}">
     <div class="bet-card-top">
       <span class="bet-card-num">#${displayNum} · ${fmtDate(b.datum)}</span>
@@ -739,6 +742,7 @@ function betCardHtml(b, displayNum) {
         <div class="bet-card-kassa">Kassa: ${b.kassa_efter.toLocaleString('sv-SE')} kr</div>
       </div>
     </div>
+    ${winGifHtml}
     ${forecastHtml}
     <div class="bet-card-actions">
       <button class="btn-ghost" onclick="editBet(${b.id})">✏️ Redigera</button>
