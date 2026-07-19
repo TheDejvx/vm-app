@@ -860,6 +860,7 @@ function renderStats() {
   const avgInsats   = Math.round(totalInsats / totalBets);
   const avgOdds     = withOdds.length ? withOdds.reduce((s, b) => s + Number(b.odds), 0) / withOdds.length : 0;
   const avgOddsWins = winsWithOdds.length ? winsWithOdds.reduce((s, b) => s + Number(b.odds), 0) / winsWithOdds.length : 0;
+  const avgVinstPerWin = wins.length ? Math.round(wins.reduce((s, b) => s + b.vinst_kr, 0) / wins.length) : 0;
   const winRate     = resolved.length ? Math.round((wins.length / resolved.length) * 100) : 0;
   const totalVinst  = resolved.reduce((s, b) => s + b.vinst_kr, 0);
   const totalInspelat = wins.reduce((s, b) => s + Math.round(b.belopp * b.odds), 0);
@@ -877,6 +878,7 @@ function renderStats() {
     { label: 'Genomsnittlig insats',  value: avgInsats.toLocaleString('sv-SE') + ' kr' },
     { label: 'Genomsnittliga odds',   value: avgOdds.toFixed(2) },
     { label: 'Snittodds (vinster)',   value: avgOddsWins ? avgOddsWins.toFixed(2) : '–' },
+    { label: 'Snittvinst per vinst',  value: wins.length ? fmtKrPlus(avgVinstPerWin) : '–', cls: 'positive' },
     { label: 'Högsta vinst',          value: biggestWin ? fmtKrPlus(biggestWin.vinst_kr) : '–', cls: 'positive' },
     { label: 'Högsta odds (vunnet)',  value: highestOddsWin ? '@' + Number(highestOddsWin.odds).toFixed(2) : '–' },
     { label: 'Största förlust',       value: biggestLoss ? '−' + biggestLoss.belopp.toLocaleString('sv-SE') + ' kr' : '–', cls: 'negative' },
