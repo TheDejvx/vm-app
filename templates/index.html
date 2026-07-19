@@ -92,7 +92,7 @@ body {
 .summary-bar {
   background: var(--white); border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0,0,0,.08);
-  display: grid; grid-template-columns: repeat(3, 1fr);
+  display: grid; grid-template-columns: repeat(4, 1fr);
   margin-bottom: 16px; overflow: hidden;
 }
 .summary-item {
@@ -320,6 +320,10 @@ tbody tr.row-pending:hover { background: #fff8dc; }
         <div class="summary-item">
           <div class="label">Vinst / förlust</div>
           <div class="value" id="sum-pnl">–</div>
+        </div>
+        <div class="summary-item">
+          <div class="label">Uttag</div>
+          <div class="value" id="sum-uttag">–</div>
         </div>
       </div>
 
@@ -626,7 +630,10 @@ function currentKassa() {
   if (!state.bets || !state.bets.length) return initialKassa();
   return state.bets[state.bets.length - 1].kassa_efter;
 }
-function totalPnl() { return currentKassa() - initialKassa(); }
+function totalUttag() { return (state.bets || []).filter(b => b.resultat === 'uttag').reduce((s, b) => s + b.belopp, 0); }
+// Kassa is reduced by withdrawals, but withdrawing your own winnings isn't a loss —
+// add withdrawn amounts back so vinst/förlust only reflects actual game outcomes.
+function totalPnl() { return currentKassa() - initialKassa() + totalUttag(); }
 function betVinstKr(bet) {
   if (bet.resultat === 'vinst')    return Math.round(bet.belopp * bet.odds) - bet.belopp;
   if (bet.resultat === 'forlust')  return -bet.belopp;
@@ -703,6 +710,7 @@ function renderSummary() {
   const pnlEl = document.getElementById('sum-pnl');
   pnlEl.textContent = fmtKrPlus(pnl);
   pnlEl.className = 'value ' + (pnl > 0 ? 'positive' : pnl < 0 ? 'negative' : '');
+  document.getElementById('sum-uttag').textContent = totalUttag().toLocaleString('sv-SE') + ' kr';
 }
 
 function betCardHtml(b, displayNum) {
@@ -844,7 +852,9 @@ function renderStats() {
   if (!body) return;
 
   if (bets.length === 0) {
-    body.innerHTML = `<div class="no-data"><div class="icon">📈</div><div>Ingen statistik tillgänglig än.</div></div>`;
+    const uttag = totalUttag();
+    body.innerHTML = `<div class="no-data"><div class="icon">📈</div><div>Ingen statistik tillgänglig än.</div></div>` +
+      (uttag ? `<div class="stats-grid"><div class="stat-card"><div class="stat-label">Totalt uttag</div><div class="stat-value">${uttag.toLocaleString('sv-SE')} kr</div></div></div>` : '');
     renderWinningBets();
     return;
   }
@@ -875,6 +885,7 @@ function renderStats() {
     { label: 'Total insats',          value: totalInsats.toLocaleString('sv-SE') + ' kr' },
     { label: 'Totalt resultat',       value: fmtKrPlus(totalVinst), cls: totalVinst >= 0 ? 'positive' : 'negative' },
     { label: 'Totalt inspelat',       value: totalInspelat.toLocaleString('sv-SE') + ' kr', cls: 'positive' },
+    { label: 'Totalt uttag',          value: totalUttag().toLocaleString('sv-SE') + ' kr' },
     { label: 'Genomsnittlig insats',  value: avgInsats.toLocaleString('sv-SE') + ' kr' },
     { label: 'Genomsnittliga odds',   value: avgOdds.toFixed(2) },
     { label: 'Snittodds (vinster)',   value: avgOddsWins ? avgOddsWins.toFixed(2) : '–' },
